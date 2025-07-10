@@ -764,7 +764,7 @@ export function AgentDetailView({
   total_call,
   onBack,
   agentName,
-  dropdowns = {}, // fallback to empty object
+  dropdowns = {},
   toggleDropdown,
   setShowAgentModal,
   setAgentData,
@@ -807,7 +807,6 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
     fetchVoices();
   }, []);
   const URL = "https://rex-bk.truet.net";
-
   const getStatusBadge = (status: Agent["status"]) => {
     const variants = {
       Online: "bg-green-100 text-green-800",
