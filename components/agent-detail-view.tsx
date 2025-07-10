@@ -780,7 +780,7 @@ export function AgentDetailView({
   const [knowledgeBases, setKnowledgeBases] = useState<string[]>([
   "Sales Docs",
   "Product Training",
-]); // Dummy data; replace with fetched data if needed
+]);
   const [businessSearch, setBusinessSearch] = useState("")
    const [businessSize, setBusinessSize] = useState("");
  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>(allBusinessTypes)
