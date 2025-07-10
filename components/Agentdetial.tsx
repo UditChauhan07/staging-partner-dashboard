@@ -716,7 +716,7 @@ const [hasNoGoogleOrWebsite, setHasNoGoogleOrWebsite] = useState(false);
       }
     }, []);
 
-const URL = "http://192.168.0.210:2512";
+const URL = "https://rex-bk.truet.net";
 
 
 const fetchKnowledgeBaseName = async () => {

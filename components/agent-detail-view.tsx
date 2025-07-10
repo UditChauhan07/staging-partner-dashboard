@@ -806,7 +806,7 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
     };
     fetchVoices();
   }, []);
-  const URL = "http://192.168.0.210:2512";
+  const URL = "https://rex-bk.truet.net";
 
   const getStatusBadge = (status: Agent["status"]) => {
     const variants = {
