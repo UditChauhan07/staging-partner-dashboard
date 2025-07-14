@@ -1,5 +1,5 @@
 "use client"
-import { BarChart3, Users, Shield, Package, Settings, LogOut, Menu, X, Headphones } from "lucide-react"
+import {Users,LogOut, Menu, X, Headphones } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SidebarProps {
@@ -11,12 +11,8 @@ interface SidebarProps {
 }
 
 const navigationItems = [
-  // { id: "analytics", label: "Analytics", icon: BarChart3 },
   { id: "users", label: "User Management", icon: Users },
-  // { id: "roles", label: "Role Management", icon: Shield },
   { id: "agents", label: "Agent Business List", icon: Headphones },
-  // { id: "products", label: "Product Management", icon: Package },
-  // { id: "settings", label: "Settings", icon: Settings },
 ]
 
 export function Sidebar({ activeSection, onSectionChange, isCollapsed, onToggleCollapse, onLogout }: SidebarProps) {
@@ -31,9 +27,6 @@ export function Sidebar({ activeSection, onSectionChange, isCollapsed, onToggleC
             <div className="text-xl font-bold text-black">
               <img src="./logo.png" className="w-24 h-auto" alt="" />
             </div>
-            {/* <div className="w-6 h-6 bg-purple-600 rounded-full flex items-center justify-center">
-              <div className="w-3 h-3 bg-white rounded-full"></div>
-            </div> */}
           </div>
         )}
         <Button variant="ghost" size="icon" onClick={onToggleCollapse} className="h-8 w-8">
@@ -50,6 +43,7 @@ export function Sidebar({ activeSection, onSectionChange, isCollapsed, onToggleC
               key={item.id}
               style={{padding:"6px"}}
               onClick={() => onSectionChange(item.id)}
+          
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${activeSection === item.id
                   ? "bg-purple-100 text-purple-700 border border-purple-200"
                   : "text-gray-600 hover:bg-gray-100"
