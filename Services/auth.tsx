@@ -1,7 +1,6 @@
 import axios from "axios";
 // const URL = "http://localhost:2512";
 const URL="https://rex-bk.truet.net"
-
 // admin login api
 export const adminLogin = async (email, password) => {
     try {
@@ -71,7 +70,6 @@ export const retrieveAllRegisteredUsers2 = async () => {
 }
 //save user
 export const addUser = async (userData) => {
-
     try {
         const response = await axios.post(`${URL}/api/endusers/createUserByAdmin`, userData);
         return response.data;
@@ -83,9 +81,6 @@ export const addUser = async (userData) => {
         }
     }
 };
-
-
-
 // delete agent permanently
 export const deleteAgent = async (id) => {
     try {
@@ -113,15 +108,11 @@ export const deactivateAgent = async (id) => {
         }
     }
 }
-
 export const getRetellVoices = async () => {
     const res = await axios.get(`${URL}/api/agent/voicelist/api`)
     console.log(res)
     return res.data.voices;
-
-
 }
-
 // export const getRetellVoices = async () => {
 //   const res = await axios.get('https://api.retellai.com/list-voices', {
 //     headers: {
@@ -130,7 +121,6 @@ export const getRetellVoices = async () => {
 //   });
 //   console.log(res)
 //   return res.data;
-
 // };
 export const createAgent = async (data) => {
     const token = localStorage.getItem("token")
@@ -141,8 +131,6 @@ export const createAgent = async (data) => {
     });
     return res;
 };
-
-
 export const fetchAgentDetailById = async (data: { agentId: string; businessId: string }) => {
     const token = localStorage.getItem("token")
     const res = await axios.post(`${URL}/api/agent/fetchAgentDetailsById`, data, {
@@ -161,8 +149,6 @@ export const validateWebsite = async (websiteUrl) => {
         return { valid: false, reason: 'Error validating website' };
     }
 };
-
-
 export const countAgentsbyUserId = async (userId) => {
     try {
         const res = await axios.get(`${URL}/api/agent/listAgents?userId=${userId}`);

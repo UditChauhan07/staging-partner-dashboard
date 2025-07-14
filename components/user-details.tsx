@@ -12,7 +12,9 @@ interface User {
   lastLogin: string
   registrationDate?: string
   phone: string
+  referredBy: string
 }
+
 interface UserDetailsProps {
   user: User
   onBack: () => void
@@ -67,6 +69,7 @@ export function UserDetails({ user, onBack }: UserDetailsProps) {
               <Shield className="h-4 w-4" />
               <span className="text-sm">{user.role || "User"}</span>
             </div>
+
           </CardContent>
         </Card>
         {/* Details Cards */}
@@ -94,12 +97,10 @@ export function UserDetails({ user, onBack }: UserDetailsProps) {
                   <label className="text-sm font-medium text-gray-500">Contact Number</label>
                   <p className="mt-1 text-gray-900">{user?.phone || "--"}</p>
                 </div>
-                {/* <div>
-                  <label className="text-sm font-medium text-gray-500">Role</label>
-                  <p className="mt-1">
-                    <Badge variant="outline">{user.role}</Badge>
-                  </p>
-                </div> */}
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Referred By</label>
+                  <p className="mt-1 text-gray-900">{user?.referredBy || "--"}</p>
+                </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Status</label>
                   <p className="mt-1">{getStatusBadge("Active")}</p>

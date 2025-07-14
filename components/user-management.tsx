@@ -23,6 +23,7 @@ interface User {
   phone: string
   referredBy?: string
   isUserType?: number
+  role?: number | null;
 }
 
 interface UserManagementProps {
@@ -36,19 +37,18 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingUser, setEditingUser] = useState<User | null>(null)
   const [deletingUser, setDeletingUser] = useState<User | null>(null)
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   const usersPerPage = 20
-
-
   async function fetchUsers() {
     try {
+      setIsLoading(true);
       const apiUsers = await retrieveAllRegisteredUsers()
       if (!Array.isArray(apiUsers)) {
         console.error("API returned error:", apiUsers)
         return
       }
-
-      console.log(apiUsers.length, "dff")
-
       const mappedUsers: User[] = apiUsers.map((u: any, index: number) => ({
         id: u.userId ?? `USR${String(index + 1).padStart(3, "0")}`,
         name: u.name ?? "N/A",
@@ -56,7 +56,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
         // role: u.userType ?? "User",
         // status: "Active",
         // lastLogin: "-",
-        registrationDate: u.createdAt ?? null, 
+        registrationDate: u.createdAt ?? null,
         phone: u.phone ?? "N/A",
         referredBy: u.referredBy,
         isUserType: u.isUserType,
@@ -65,6 +65,8 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
       setUsers(mappedUsers)
     } catch (error) {
       console.error("Failed to fetch users", error)
+    } finally {
+      setIsLoading(false);
     }
   }
   useEffect(() => {
@@ -117,6 +119,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
     });
 
     if (result.isConfirmed) {
+      setDeletingUserId(user.id);
       try {
         const res = await deleteUser(user.id);
         if (res && res.status === true) {
@@ -143,6 +146,8 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
           title: 'Error!',
           text: 'Error occurred while deleting user.',
         });
+      } finally {
+        setDeletingUserId(null);
       }
     }
   };
@@ -150,6 +155,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
 
 
   const handleSaveUser = async (userData: Omit<User, "id">) => {
+    setIsSaving(true);
     const name = userData.name?.trim();
     const phone = userData.phone?.trim();
     const email = userData.email?.trim();
@@ -159,6 +165,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
       email, // always required
       ...(name ? { name } : {}),
       ...(phone ? { phone } : {}),
+      role: null
     };
 
 
@@ -179,8 +186,8 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
 
     try {
       const response = await addUser(finalPayload);
-      fetchUsers()
-      if (response?.status === true || response?.success === true) {
+      if (response?.status === true) {
+        fetchUsers()
         const userId = finalPayload.id || response?.data?.userId || `USR${String(users.length + 1).padStart(3, "0")}`;
 
         const savedUser: User = {
@@ -188,6 +195,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
           name: name || "",
           email,
           phone: phone || "",
+          role: finalPayload.role ?? null
         };
 
         if (editingUser) {
@@ -213,20 +221,26 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
         }
       } else {
         Swal.fire({
-          icon: 'error',
-          title: 'Failed to save user',
-          text: response?.msg || 'Something went wrong.'
+          icon: "error",
+          title: "Failed to save user",
+          text: response?.data.error,
         });
       }
-    } catch (error) {
-      console.error(error);
+    } catch (error: any) {
+      console.error("Save user error:", error);
+      let errorMsg = "Something went wrong while saving the user.";
+      if (error?.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error?.message) {
+        errorMsg = error.message;
+      }
       Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Something went wrong while saving the user.'
+        icon: "error",
+        title: "Error",
+        text: errorMsg,
       });
     }
-
+    setIsSaving(false);
     setIsModalOpen(false);
     setEditingUser(null);
   };
@@ -252,112 +266,128 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
           Add New User
         </Button>
       </div>
-
-      <Card>
-        <CardHeader>
-          <div className="flex justify-between items-center">
-            <CardTitle>All Users</CardTitle>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-              <Input
-                placeholder="Search users..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">User ID</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Phone Number</th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="text-center py-6 text-gray-500">
-                      No users found.
-                    </td>
-                  </tr>
-                ) : (
-
-                  paginatedUsers.map((user) => (
-                    <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-3 px-4 font-mono text-sm">{user.id}</td>
-                      <td className="py-3 px-4 font-medium">{user.name}</td>
-                      <td className="py-3 px-4 text-gray-600">{user.email}</td>
-                      <td className="py-3 px-4 text-gray-600">{user.phone}</td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => onViewUser(user)}>
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleEditUser(user)}>
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteUser(user)}
-                            className="text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </td>
+      {isLoading ? (
+        <div className="flex justify-center items-center h-[300px]">
+          <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-purple-600 border-solid"></div>
+        </div>
+      ) : (
+        <>
+          <Card>
+            <CardHeader>
+              <div className="flex justify-between items-center">
+                <CardTitle>All Users</CardTitle>
+                <div className="relative w-64">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search users..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">User ID</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Name</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Email</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Phone Number</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Referred By</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Actions</th>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {paginatedUsers.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-6 text-gray-500">
+                          No users found.
+                        </td>
+                      </tr>
+                    ) : (
 
-          {/* Pagination */}
-          <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-600">
-              Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of{" "}
-              {filteredUsers.length} users
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <span className="px-3 py-1 text-sm bg-gray-100 rounded">
-                {currentPage} of {totalPages}
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
-                disabled={currentPage === totalPages}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                      paginatedUsers.map((user) => (
+                        <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
+                          <td className="py-3 px-4 font-mono text-sm">{user.id}</td>
+                          <td className="py-3 px-4 font-medium">{user.name}</td>
+                          <td className="py-3 px-4 text-gray-600">{user.email}</td>
+                          <td className="py-3 px-4 text-gray-600">{user.phone}</td>
+                          <td className="py-3 px-4 text-gray-600">{user.referredBy}</td>
+                          <td className="py-3 px-4">
+                            <div className="flex gap-2">
+                              <Button size="sm" variant="outline" onClick={() => onViewUser(user)}>
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button size="sm" variant="outline" onClick={() => handleEditUser(user)}>
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteUser(user)}
+                                className="text-red-600 hover:text-red-700"
+                                disabled={deletingUserId === user.id}
+                              >
+                                {deletingUserId === user.id ? (
+                                  <div className="h-4 w-4 border-2 border-purple-600 border-t-transparent animate-spin rounded-full" />
+                                ) : (
+                                  <Trash2 className="h-4 w-4" />
+                                )}
+                              </Button>
 
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between mt-6">
+                <div className="text-sm text-gray-600">
+                  Showing {startIndex + 1} to {Math.min(startIndex + usersPerPage, filteredUsers.length)} of{" "}
+                  {filteredUsers.length} users
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="px-3 py-1 text-sm bg-gray-100 rounded">
+                    {currentPage} of {totalPages}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+        </>
+      )
+      }
       <UserModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveUser}
         user={editingUser}
+        isSaving={isSaving}
       />
-
       {/* <DeleteConfirmModal
         isOpen={!!deletingUser}
         onClose={() => setDeletingUser(null)}
@@ -366,5 +396,6 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
         message={`Are you sure you want to delete ${deletingUser?.name}? This action cannot be undone.`}
       /> */}
     </div>
+
   )
 }
