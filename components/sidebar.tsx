@@ -1,5 +1,5 @@
 "use client"
-import {Users,LogOut, Menu, X, Headphones } from "lucide-react"
+import {Users,LogOut, Menu, X, Headphones,Link2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 interface SidebarProps {
@@ -13,7 +13,9 @@ interface SidebarProps {
 const navigationItems = [
   { id: "users", label: "User Management", icon: Users },
   { id: "agents", label: "Agent Business List", icon: Headphones },
+  { id: "referral", label: "Referral Link", icon: Link2 },
 ]
+
 
 export function Sidebar({ activeSection, onSectionChange, isCollapsed, onToggleCollapse, onLogout }: SidebarProps) {
   return (
