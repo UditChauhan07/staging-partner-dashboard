@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Eye, EyeOff, Trash2, Plus } from "lucide-react";
 import axios from "axios";
 import { Input } from "./ui/input";
 import {
@@ -13,7 +13,7 @@ import {
   SelectValue,
   SelectContent,
   SelectItem,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   ArrowLeft,
@@ -30,8 +30,8 @@ import {
   BookOpen,
   Save,
 } from "lucide-react";
-import { getRetellVoices } from "@/Services/auth";
-
+import { getRetellVoices, validateWebsite } from "@/Services/auth";
+import Swal from "sweetalert2";
 
 interface Agent {
   agent_id: string;
@@ -68,636 +68,33 @@ interface Business {
 }
 
 interface BusinessType {
-  type: string
-  subtype: string
-  icon: string
+  type: string;
+  subtype: string;
+  icon: string;
 }
 
-const allBusinessTypes = [
-    {
-      type: "Real Estate Broker",
-      subtype: "Property Transaction Facilitator",
-      icon: "svg/Estate-icon.svg",
-    },
-    {
-      type: "Restaurant",
-      subtype: "Food Service Establishment",
-      icon: "svg/Landscaping-icon.svg",
-    },
-    {
-      type: "Interior Designer",
-      subtype: "Indoor Space Beautifier",
-      icon: "svg/Interior-Designer-icon.svg",
-    },
-    {
-      type: "Saloon",
-      subtype: "Hair Styling & Grooming",
-      icon: "svg/Saloon-icon.svg",
-    },
-    {
-      type: "Landscaping Company",
-      subtype: "Outdoor Space Beautification",
-      icon: "svg/Landscaping-icon.svg",
-    },
-    {
-      type: "Dentist",
-      subtype: "Dental Care Provider",
-      icon: "svg/Dentist-Office-icon.svg",
-    },
-    {
-      type: "Doctor's Clinic",
-      subtype: "Medical Consultation & Treatment",
-      icon: "svg/Doctor-clinic-icon.svg",
-    },
-    {
-      type: "Gym & Fitness Center",
-      subtype: "Exercise Facility & Training",
-      icon: "svg/Gym-icon.svg",
-    },
-
-    {
-      type: "Personal Trainer",
-      subtype: "Individual Fitness Coaching",
-      icon: "svg/Personal-Trainer-icon.svg",
-    },
-    {
-      type: "Web Design Agency",
-      subtype: "Website Creation & Development",
-      icon: "svg/Web-Design-Agency-icon.svg",
-    },
-    {
-      type: "Architect",
-      subtype: "Building Design Expert",
-      icon: "svg/Architect-icon.svg",
-    },
-    {
-      type: "Property Rental & Leasing Service",
-      subtype: "Property Rental Management",
-      icon: "svg/Property Rental & Leasing Service.svg",
-    },
-    {
-      type: "Construction Services",
-      subtype: "Building Construction & Repair",
-      icon: "svg/Construction Services.svg",
-    },
-    {
-      type: "Insurance Agency",
-      subtype: "Risk Protection Provider",
-      icon: "svg/Insurance Agency.svg",
-    },
-    {
-      type: "Old Age Home",
-      subtype: "Senior Living Facility",
-      icon: "svg/Old Age Home.svg",
-    },
-    {
-      type: "Travel Agency",
-      subtype: "Trip Planning & Booking",
-      icon: "svg/Travel Agency.svg",
-    },
-    {
-      type: "Ticket Booking",
-      subtype: "Travel Ticket Provider",
-      icon: "svg/Ticket Booking.svg",
-    },
-    {
-      type: "Accounting Services",
-      subtype: "Financial Record Management",
-      icon: "svg/Accounting Services.svg",
-    },
-    {
-      type: "Financial Planners",
-      subtype: "Wealth Management Advice",
-      icon: "svg/Financial Planners.svg",
-    },
-    {
-      type: "Beauty Parlour",
-      subtype: "Cosmetic Beauty Services",
-      icon: "svg/Beauty Parlour.svg",
-    },
-    {
-      type: "Nail Salon",
-      subtype: "Manicure/Pedicure Services",
-      icon: "svg/Nail Saloon.svg",
-    },
-    {
-      type: "Barber Studio/Shop",
-      subtype: "Men's Hair Grooming",
-      icon: "svg/Barber.svg",
-    },
-    {
-      type: "Hair Stylist",
-      subtype: "Professional Hair Care",
-      icon: "svg/Hair Stylist.svg",
-    },
-    {
-      type: "Bakery",
-      subtype: "Baked Goods Producer",
-      icon: "svg/Bakery.svg",
-    },
-    {
-      type: "Dry Cleaner",
-      subtype: "Garment Cleaning & Care",
-      icon: "svg/Dry Cleaner.svg",
-    },
-    {
-      type: "Cleaning Janitorial Service",
-      subtype: "Professional Cleaning Solutions",
-      icon: "svg/Cleaning Janitorial Service.svg",
-    },
-    // {
-    //   type: "Marketing Agency",
-    //   subtype: "Your Journey Begins Here",
-    //   icon: "svg/Marketing Agency.svg",
-    // },
-
-
-    {
-      type: "Other",
-      subtype: "More Ideas, More Impact",
-      icon: "svg/Web-Design-Agency-icon.svg",
-    }
-  ];
-  const avatars = {
+const avatars = {
   Male: [
-    { img: '/images/Male-01.png' },
-    { img: '/images/Male-02.png' },
-    { img: '/images/Male-03.png' },
-    { img: '/images/Male-04.png' },
-    { img: '/images/Male-05.png' },
+    { img: "/images/Male-01.png" },
+    { img: "/images/Male-02.png" },
+    { img: "/images/Male-03.png" },
+    { img: "/images/Male-04.png" },
+    { img: "/images/Male-05.png" },
   ],
   Female: [
-    { img: '/images/Female-01.png' },
-    { img: '/images/Female-02.png' },
-    { img: '/images/Female-03.png' },
-    { img: '/images/Female-04.png' },
-    { img: '/images/Female-05.png' },
-    { img: '/images/Female-06.png' },
+    { img: "/images/Female-01.png" },
+    { img: "/images/Female-02.png" },
+    { img: "/images/Female-03.png" },
+    { img: "/images/Female-04.png" },
+    { img: "/images/Female-05.png" },
+    { img: "/images/Female-06.png" },
   ],
 };
-
-
-const businessServices = [
-    {
-      type: "Restaurant",
-      subtype: "Food Service Establishment",
-      icon: "svg/Restaurant-icon.svg",
-      services: [
-        "Dine-in Service",
-        "Takeaway Orders",
-        "Home Delivery",
-        "Event Catering",
-        "Online Ordering",
-        "Other"
-      ],
-    },
-    {
-      type: "Real Estate Broker",
-      subtype: "Property Transaction Facilitator",
-      icon: "svg/Estate-icon.svg",
-      services: [
-        "Property Sales",
-        "Property Rentals",
-        "Property Viewings",
-        "Price Valuation",
-        "Legal Help",
-        "Other"
-      ],
-    },
-    {
-      type: "Saloon",
-      subtype: "Hair Styling & Grooming",
-      icon: "svg/Saloon-icon.svg",
-      services: [
-        "Haircuts",
-        "Hair Spa Treatments",
-        "Hair Straightening",
-        "Nail Extensions",
-        "Facials",
-        "Other"
-      ],
-    },
-    {
-      type: "Doctor's Clinic",
-      subtype: "Medical Consultation & Treatment",
-      icon: "svg/Doctor-clinic-icon.svg",
-      services: [
-        "General Checkups",
-        "Specialist Consultations",
-        "Vaccinations",
-        "Blood Tests",
-        "Health Screenings",
-        "Other"
-      ],
-    },
-    {
-      type: "Dry Cleaner",
-      subtype: "Garment Cleaning & Care",
-      icon: "svg/Dry -Cleaner-icon.svg",
-      services: [
-        "Garment Cleaning",
-        "Stain Removal",
-        "Clothing Alterations",
-        "Leather & Suede Cleaning",
-        "Other"
-      ],
-    },
-    {
-      type: "Web Design Agency",
-      subtype: "Website Creation & Development",
-      icon: "svg/Web-Design-Agency-icon.svg",
-      services: [
-        "Website Creation",
-        "Responsive Design",
-        "SEO Services",
-        "Website Maintenance",
-        "E-commerce Setup",
-        "Other"
-      ],
-    },
-    {
-      type: "Gym & Fitness Center",
-      subtype: "Exercise Facility & Training",
-      icon: "svg/Gym-icon.svg",
-      services: [
-        "Group Fitness Classes",
-        "Weight Training Equipment",
-        "Cardio Workouts",
-        "Personal Training Sessions",
-        "Other"
-      ],
-    },
-    {
-      type: "Marketing Agency",
-      subtype: "Business Promotion Strategies",
-      icon: "svg/Marketing Agency.svg",
-      services: [
-        "Social Media Advertising",
-        "Content Creation",
-        "Email Marketing",
-        "PPC Ads",
-        "Branding Strategy",
-        "Other"
-      ],
-    },
-    {
-      type: "Personal Trainer",
-      subtype: "Individual Fitness Coaching",
-      icon: "images/other.png",
-      services: [
-        "Personalized Workout Plans",
-        "One-on-One Training",
-        "Nutrition Guidance",
-        "Fitness Assessments",
-        "Other"
-      ],
-    },
-    {
-      type: "Architect",
-      subtype: "Building Design Expert",
-      icon: "svg/Architect-icon.svg",
-      services: [
-        "Residential Building Design",
-        "Commercial Building Plans",
-        "Renovation Planning",
-        "Permit Drawings",
-        "Site Planning",
-        "Project Management",
-        "Other"
-      ],
-    },
-    {
-      type: "Interior Designer",
-      subtype: "Indoor Space Beautifier",
-      icon: "images/other.png",
-      services: [
-        "Space Planning",
-        "Furniture Selection",
-        "Color Consultation",
-        "Lighting Design",
-        "Home Makeovers",
-        "Other"
-      ],
-    },
-    {
-      type: "Construction Services",
-      subtype: "Building Construction & Repair",
-      icon: "svg/Construction Services.svg",
-      services: [
-        "New Building Construction",
-        "Home Renovations",
-        "Project Supervision",
-        "Structural Repairs",
-        "Other"
-      ],
-    },
-    {
-      type: "Cleaning/Janitorial Service",
-      subtype: "Building Construction & Repair",
-      icon: "images/other.png",
-      services: [
-        "Office Cleaning",
-        "Deep Carpet Cleaning",
-        "Window Washing",
-        "Floor Polishing",
-        "Regular Maintenance",
-        "Other"
-      ],
-    },
-    {
-      type: "Transport Company",
-      subtype: "Freight Transportation Services",
-      icon: "images/other.png",
-      services: [
-        "Freight Shipping",
-        "Passenger Transport",
-        "Courier Services",
-        "Vehicle Rentals",
-        "Logistics Management",
-        "Other"
-      ],
-    },
-    {
-      type: "Landscaping Company",
-      subtype: "Outdoor Space Beautification",
-      icon: "images/other.png",
-      services: [
-        "Lawn Mowing & Maintenance",
-        "Garden Design",
-        "Tree Pruning & Removal",
-        "Irrigation Installation",
-        "Other"
-      ],
-    },
-    {
-      type: "Insurance Agency",
-      subtype: "Risk Protection Provider",
-      icon: "svg/Insurance Agency.svg",
-      services: [
-        "Life Insurance",
-        "Health Insurance",
-        "Car Insurance",
-        "Home Insurance",
-        "Business Insurance",
-        "Other"
-      ],
-    },
-    {
-      type: "Financial Services",
-      subtype: "Wealth Management Advice",
-      icon: "images/other.png",
-      services: [
-        "Investment Planning",
-        "Tax Preparation",
-        "Retirement Planning",
-        "Wealth Management",
-        "Loan Consulting",
-        "Other"
-      ],
-    },
-    {
-      type: "Accounting Services",
-      subtype: "Financial Record Management",
-      icon: "svg/Accounting Services.svg",
-      services: [
-        "Bookkeeping",
-        "Tax Filing",
-        "Payroll Services",
-        "Financial Auditing",
-        "Business Financial Reports",
-        "Other"
-      ],
-    },
-    {
-      type: "Car Repair & Garage",
-      subtype: "Vehicle Maintenance & Repair",
-      icon: "images/other.png",
-      services: [
-        "Oil & Filter Change",
-        "Brake Repairs",
-        "Engine Diagnostics",
-        "Tire Replacement",
-        "Battery Service",
-        "Other"
-      ],
-    },
-    {
-      type: "Boat Repair & Maintenance",
-      subtype: "Watercraft Upkeep & Repair",
-      icon: "images/other.png",
-      services: [
-        "Hull Repair",
-        "Engine Maintenance",
-        "Electrical System Repairs",
-        "Boat Cleaning",
-        "Winterizing Services",
-        "Other"
-      ],
-    },
-    {
-      type: "Dentist",
-      subtype: "Dental Care Provider",
-      icon: "images/other.png",
-      services: [
-        "Teeth",
-        "Cleaning",
-        "Teeth Whitening",
-        "Braces & Aligners",
-        "Root Canal",
-        "Tooth Extraction",
-        "Other"
-      ],
-    },
-    {
-      type: "Property Rental & Leasing Service",
-      subtype: "Property Rental Management",
-      icon: "svg/Property Rental & Leasing Service.svg",
-      services: [
-        "Tenant Screening",
-        "Lease Agreement Preparation",
-        "Rent Collection",
-        "Property Maintenance Coordination",
-        "Other"
-      ],
-    },
-    {
-      type: "Old Age Home",
-      subtype: "Senior Living Facility",
-      icon: "svg/Old Age Home.svg",
-      services: [
-        "Assisted Living",
-        "Meal Services",
-        "Housekeeping & Laundry",
-        "Recreational Activities",
-        "Physiotherapy",
-        "Emergency Support",
-        "Other"
-      ],
-    },
-    {
-      type: "Travel Agency",
-      subtype: "Trip Planning & Booking",
-      icon: "svg/Travel Agency.svg",
-      services: [
-        "Flight Booking",
-        "Hotel Reservations",
-        "Holiday Packages",
-        "Visa Assistance",
-        "Travel Insurance",
-        "Customized Itineraries",
-        "Cruise Bookings",
-        "Local Tours & Sightseeing",
-        "Car Rentals",
-        "Other"
-      ],
-    },
-    {
-      type: "Ticket Booking",
-      subtype: "Travel Ticket Provider",
-      icon: "svg/Ticket Booking.svg",
-      services: [
-        "Flight Tickets",
-        "Train Tickets",
-        "Bus Tickets",
-        "Movie Tickets",
-        "Event Tickets",
-        "Amusement Park Tickets",
-        "Concert & Show Tickets",
-        "Sports Tickets",
-        "Other"
-      ],
-    }
-    ,
-    {
-      type: "Financial Planners",
-      subtype: "Wealth Management Advice",
-      icon: "svg/Financial Planners.svg",
-      services: [
-        "Retirement Planning",
-        "Investment Portfolio Management",
-        "Tax Planning",
-        "Budgeting & Expense Management",
-        "Estate Planning",
-        "Insurance Planning",
-        "Education Planning",
-        "Debt Management",
-        "Other"
-      ],
-    },
-    {
-      type: "Beauty Parlour",
-      subtype: "Cosmetic Beauty Services",
-      icon: "svg/Beauty Parlour.svg",
-      services: [
-        "Hair Cutting & Styling",
-        "Facials & Cleanups",
-        "Manicure & Pedicure",
-        "Bridal Makeup",
-        "Hair Coloring & Highlights",
-        "Waxing & Threading",
-        "Skin Treatments",
-        "Makeup for Events",
-        "Spa & Massage Services",
-        "Other"
-      ],
-    },
-    {
-      type: "Nail Salon",
-      subtype: "Manicure/Pedicure Services",
-      icon: "svg/Nail Saloon.svg",
-      services: [
-        "Manicure",
-        "Pedicure",
-        "Nail Art",
-        "Gel Nails",
-        "Acrylic Nails",
-        "Nail Extensions",
-        "Cuticle Care",
-        "Nail Repair & Removal",
-        "Hand & Foot Spa",
-        "Other"
-      ],
-    }
-    ,
-    {
-      type: "Barber Studio/Shop",
-      subtype: "Men's Hair Grooming",
-      icon: "svg/Barber.svg",
-      services: [
-        "Haircut",
-        "Beard Trimming & Styling",
-        "Shaving & Grooming",
-        "Hair Coloring",
-        "Head Massage",
-        "Facial for Men",
-        "Scalp Treatment",
-        "Hair Wash & Styling",
-        "Kids Haircut",
-        "Other"
-      ],
-    }
-    ,
-    {
-      type: "Hair Stylist",
-      subtype: "Professional Hair Care",
-      icon: "svg/Hair Stylist.svg",
-      services: [
-        "Hair Cutting & Trimming",
-        "Hair Styling",
-        "Blow Dry & Ironing",
-        "Hair Coloring & Highlights",
-        "Hair Spa",
-        "Keratin & Smoothening Treatments",
-        "Hair Extensions",
-        "Scalp Treatments",
-        "Bridal & Occasion Hairstyles",
-        "Other"
-      ],
-    }
-    ,
-    {
-      type: "Bakery",
-      subtype: "Baked Goods Producer",
-      icon: "svg/Bakery.svg",
-      services: [
-        "Custom Cakes",
-        "Birthday & Wedding Cakes",
-        "Pastries & Cupcakes",
-        "Cookies & Biscuits",
-        "Bread & Buns",
-        "Chocolates & Desserts",
-        "Eggless & Sugar-Free Items",
-        "Bulk & Party Orders",
-        "Online Ordering & Delivery",
-        "Other"
-      ],
-    },
-    {
-      type: "Cleaning Janitorial Service",
-      subtype: "Professional Cleaning Solutions",
-      icon: "svg/Cleaning Janitorial Service.svg",
-      services: [
-        "Residential Cleaning",
-        "Commercial Office Cleaning",
-        "Deep Cleaning Services",
-        "Move-In/Move-Out Cleaning",
-        "Carpet & Upholstery Cleaning",
-        "Window Cleaning",
-        "Disinfection & Sanitization",
-        "Post-Construction Cleaning",
-        "Restroom Cleaning & Maintenance",
-        "Other"
-      ],
-    }
-
-
-
-]
 
 interface AgentDetailViewProps {
   agent: Agent;
   business: Business;
-  total_call:total_call,
+  total_call: total_call;
   onBack: () => void;
   agentName: string;
   dropdowns?: Record<string, boolean>;
@@ -728,33 +125,46 @@ const getModelImage = (model: string) => {
 };
 
 const sidebarOptions = [
-  { id: "functions", label: "Functions", icon: Settings, hasDropdown: true },
+  // { id: "functions", label: "Functions", icon: Settings, hasDropdown: true },
   {
     id: "knowledge",
     label: "Knowledge Base",
     icon: BookOpen,
-hasDropdown: true, 
-  },
-  { id: "speech", label: "Speech Settings", icon: Volume2, hasDropdown: false },
-  { id: "call", label: "Call Settings", icon: Phone, hasDropdown: true },
-  {
-    id: "forwards",
-    label: "Text-Call Forwards",
-    icon: PhoneForwarded,
-    hasDropdown: false,
-  },
-  {
-    id: "security",
-    label: "Security & Callback Settings",
-    icon: Shield,
     hasDropdown: true,
   },
-  {
-    id: "webhook",
-    label: "Webhook Settings",
-    icon: Webhook,
-    hasDropdown: false,
-  },
+  // { id: "speech", label: "Speech Settings", icon: Volume2, hasDropdown: false },
+  // { id: "call", label: "Call Settings", icon: Phone, hasDropdown: true },
+  // {
+  //   id: "forwards",
+  //   label: "Text-Call Forwards",
+  //   icon: PhoneForwarded,
+  //   hasDropdown: false,
+  // },
+  // {
+  //   id: "security",
+  //   label: "Security & Callback Settings",
+  //   icon: Shield,
+  //   hasDropdown: true,
+  // },
+  // {
+  //   id: "webhook",
+  //   label: "Webhook Settings",
+  //   icon: Webhook,
+  //   hasDropdown: false,
+  // },
+];
+
+const variableList = [
+  { name: "AGENT NAME" },
+  { name: "BUSINESS NAME" },
+  { name: "BUSINESSTYPE" },
+  { name: "SERVICES" },
+  { name: "LANGUAGE" },
+  { name: "BUSINESS EMAIL ID" },
+  { name: "current_time" },
+  { name: "current_time_[timezone]" },
+  { name: "MORE ABOUT YOUR BUSINESS" },
+  { name: "AGENTNOTE" },
 ];
 
 export function AgentDetailView({
@@ -764,37 +174,147 @@ export function AgentDetailView({
   total_call,
   onBack,
   agentName,
-  dropdowns = {},
+  dropdowns = {}, // fallback to empty object
   toggleDropdown,
   setShowAgentModal,
   setAgentData,
   languages,
 }: AgentDetailViewProps) {
   const [activeTab, setActiveTab] = useState("functions");
-  const [retellVoices, setRetellVoices] = useState<any[]>([]);
+  const [retellVoices, setRetellVoices] = useState(
+    [] || agent?.agentVoice || "English(US)"
+  );
   const [isDynamicView, setIsDynamicView] = useState(false);
   const [prompt, setPrompt] = useState(agent.rawPromptTemplate || "");
   const dynamicPrompt = agent.dynamicPromptTemplate || "";
-  const [modelName, setModelName] = useState(agent.modelName || "gemini-2.0-flash");
-  const [selectedVoiceId, setSelectedVoiceId] = useState(agent.voice_id || "");
-  const [knowledgeBases, setKnowledgeBases] = useState<string[]>([
-  "Sales Docs",
-  "Product Training",
-]);
-  const [businessSearch, setBusinessSearch] = useState("")
-   const [businessSize, setBusinessSize] = useState("");
- const [businessTypes, setBusinessTypes] = useState<BusinessType[]>(allBusinessTypes)
-  const [allServices, setAllServices] = useState<{ [key: string]: string[] }>({})
-  const [selectedType, setSelectedType] = useState("")
-  const [newBusinessType, setNewBusinessType] = useState("")
-  const [newService, setNewService] = useState("")
-const [showAddKnowledgeModal, setShowAddKnowledgeModal] = useState(false);
- const [form, setForm] = useState<any>({})
-const [newKnowledgeName, setNewKnowledgeName] = useState("");
-  const [selectedLanguage, setSelectedLanguage] = useState(
-    agent.language || ""
+  const [modelName, setModelName] = useState(
+    agent.modelName || "gemini-2.0-flash"
   );
-console.log(knowledge_base_texts,"knowledge_base_texts")
+  const [selectedVoiceId, setSelectedVoiceId] = useState(
+    agent?.agentVoice || ""
+  );
+  const [knowledgeBases, setKnowledgeBases] = useState<string[]>([
+    "Sales Docs",
+  ]); // Dummy data; replace with fetched data if needed
+  const [businessSearch, setBusinessSearch] = useState("");
+  const [businessSize, setBusinessSize] = useState("");
+  //  const [businessTypes, setBusinessTypes] = useState<BusinessType[]>(allBusinessTypes)
+  const [allServices, setAllServices] = useState<{ [key: string]: string[] }>(
+    {}
+  );
+  const [selectedType, setSelectedType] = useState("");
+  const [newBusinessType, setNewBusinessType] = useState("");
+  const [newService, setNewService] = useState("");
+  const [showAddKnowledgeModal, setShowAddKnowledgeModal] = useState(false);
+  // const [newKnowledgeName, setNewKnowledgeName] = useState("");
+  const [showAddOptions, setShowAddOptions] = useState(false);
+  // const [form, setForm] = useState({ businessUrl: "", services: [], customServices: [], businessType: "" });
+  const [isWebsiteValid, setIsWebsiteValid] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [customText, setCustomText] = useState("");
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+
+  const [form, setForm] = useState<any>({});
+  const [newKnowledgeName, setNewKnowledgeName] = useState("");
+  const [selectedLanguage, setSelectedLanguage] = useState(
+    agent?.agentLanguageCode || ""
+  );
+
+  const textareaRef = useRef(null);
+
+  const parsedVariables =
+    typeof agent?.promptVariablesList === "string"
+      ? JSON.parse(agent.promptVariablesList)
+      : agent?.promptVariablesList || [];
+
+  const insertVariableAtCursor = (variable) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const before = prompt.slice(0, start);
+    const after = prompt.slice(end);
+    const variableText = `{{${variable}}}`;
+    const newPrompt = before + variableText + after;
+    setPrompt(newPrompt);
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + variableText.length,
+        start + variableText.length
+      );
+    }, 0);
+  };
+
+  const liveDynamicPrompt = prompt.replace(/{{(.*?)}}/g, (_match, varName) => {
+    const found = parsedVariables.find(
+      (v) => v.name.toLowerCase() === varName.trim().toLowerCase()
+    );
+    if (!found) return _match;
+    const val = found.value;
+    if (Array.isArray(val)) {
+      return val.map((s) => s.service || s).join(", ");
+    }
+    return val ?? "";
+  });
+
+  // const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const handledeleteknowledgebase = async (knowledge_base_id) => {
+    try {
+      const res = await axios.delete(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/knowledgeBase/deleteKnowledgeBase/${knowledge_base_id}`
+      );
+      if (res.data?.status === true) {
+        Swal.fire("Deleted!", "Knowledge base deleted successfully", "success");
+        setKnowledgeBases((prev) =>
+          prev.filter((id) => id !== knowledge_base_id)
+        );
+      } else {
+        Swal.fire("Error", "Could not delete the knowledge base", "error");
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire("Error", "Something went wrong", "error");
+    }
+  };
+
+  const handleWebsiteBlur = async () => {
+    const url = form.businessUrl;
+    if (!url) return;
+
+    setIsVerifying(true);
+    try {
+      const result = await validateWebsite(url); // your API
+      setIsWebsiteValid(result.valid);
+    } catch (err) {
+      console.error("Website verification error:", err);
+      setIsWebsiteValid(false);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const getLeadTypeChoices = () => {
+    const fixedChoices = [
+      "Spam Caller",
+      "Irrelvant Call",
+      "Angry Old Customer",
+    ];
+    const allServices = [...customServices, ...businessServiceNames];
+    const cleanedServices = allServices
+      .map((service) => service?.trim()) // remove extra whitespace
+      .filter((service) => service && service?.toLowerCase() !== "other")
+      .map((service) => {
+        const normalized = service?.replace(/\s+/g, " ")?.trim();
+        return `Customer for ${normalized}`;
+      });
+    const combinedChoices = Array.from(
+      new Set([...fixedChoices, ...cleanedServices])
+    );
+    return combinedChoices;
+  };
+  console.log(knowledge_base_texts, "knowledge_base_texts");
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -806,7 +326,8 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
     };
     fetchVoices();
   }, []);
-  const URL = "https://rex-bk.truet.net";
+  // const URL = "https://rex-bk.truet.net";
+
   const getStatusBadge = (status: Agent["status"]) => {
     const variants = {
       Online: "bg-green-100 text-green-800",
@@ -845,11 +366,11 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
                 </div>
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4 text-gray-500" />
-                  <span>{business?.userName || "NA"}</span>
+                  <span>{business?.businessType || "NA"}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-gray-500" />
-                  <span>{agent?.phone || "NA"}</span>
+                  <span>{business?.knowledge_base_texts?.phone || "NA"}</span>
                 </div>
               </div>
             </CardContent>
@@ -857,61 +378,74 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
         </div>
 
         <nav className="flex-1 p-4 space-y-1">
-         {sidebarOptions.map((opt) => {
-  const Icon = opt.icon;
-  const isActive = activeTab === opt.id;
-  const isDropdownOpen = dropdowns[opt.id];
+          {sidebarOptions.map((opt) => {
+            const Icon = opt.icon;
+            const isActive = activeTab === opt.id;
+            const isDropdownOpen = dropdowns[opt.id];
 
-  return (
-    <div key={opt.id}>
-      <button
-        onClick={() => {
-          setActiveTab(opt.id);
-          if (opt.hasDropdown) toggleDropdown(opt.id);
-        }}
-        className={`flex items-center justify-between w-full px-4 py-2 rounded-lg transition-all ${
-          isActive
-            ? "bg-blue-50 text-blue-700 border border-blue-200"
-            : "hover:bg-gray-100"
-        }`}
-      >
-        <div className="flex items-center gap-3">
-          <Icon className="h-5 w-5" />
-          <span>{opt.label}</span>
-        </div>
-        {opt.hasDropdown && (
-          isDropdownOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />
-        )}
-      </button>
+            return (
+              <div key={opt.id}>
+                <button
+                  onClick={() => {
+                    setActiveTab(opt.id);
+                    if (opt.hasDropdown) toggleDropdown(opt.id);
+                  }}
+                  className={`flex items-center justify-between w-full px-4 py-2 rounded-lg transition-all ${
+                    isActive
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "hover:bg-gray-100"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Icon className="h-5 w-5" />
+                    <span>{opt.label}</span>
+                  </div>
+                  {opt.hasDropdown &&
+                    (isDropdownOpen ? (
+                      <ChevronUp className="h-4 w-4" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4" />
+                    ))}
+                </button>
 
-      {/* Knowledge Base Dropdown Items */}
-      {opt.id === "knowledge" && isDropdownOpen && (
-        <div className="ml-8 mt-2 space-y-2">
-          {knowledgeBases.map((kb, index) => (
-            <div key={index} className="flex items-center justify-between">
-              <span className="text-sm text-gray-700">{agent.knowledgeBaseId}</span>
-              <button
-                className="text-red-500 text-xs"
-                onClick={() => {
-                  setKnowledgeBases(prev => prev.filter(name => name !== kb));
-                }}
-              >
-              <Trash2 className="h-4 w-4" />
-              </button>
-            </div>
-          ))}
-          <button
-            onClick={() => setShowAddKnowledgeModal(true)}
-            className="text-blue-600 text-sm underline mt-2"
-          >
-            + Add New
-          </button>
-        </div>
-      )}
-    </div>
-  );
-})}
+                {/* Knowledge Base Dropdown Items */}
+                {opt.id === "knowledge" && isDropdownOpen && (
+                  <div className="ml-8 mt-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">
+                        {agent.knowledgeBaseId}
+                      </span>
+                      <button
+                        className="text-red-500 text-xs"
+                        onClick={() => {
+                          setKnowledgeBases((prev) => {
+                            const trimmed = newKnowledgeName.trim();
+                            return prev.includes(trimmed)
+                              ? prev
+                              : [...prev, trimmed];
+                          });
+                        }}
+                      >
+                        <Trash2
+                          onClick={() =>
+                            handledeleteknowledgebase(agent.knowledgeBaseId)
+                          }
+                          className="h-4 w-4"
+                        />
+                      </button>
+                    </div>
 
+                    <button
+                      onClick={() => setShowAddKnowledgeModal(true)}
+                      className="text-blue-600 text-sm underline mt-2"
+                    >
+                      + Add New
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         <div className="p-4 border-t bg-gray-50">
@@ -956,38 +490,12 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
                 className="w-5 h-5 rounded-full"
               />
               <span>{modelName}</span>
-              {dropdowns?.model ? (
+              {/* {dropdowns?.model ? (
                 <ChevronUp size={16} />
               ) : (
                 <ChevronDown size={16} />
-              )}
+              )} */}
             </button>
-            {dropdowns?.model && (
-              <div className="absolute mt-1 w-64 bg-white border rounded shadow z-10 max-h-60 overflow-y-auto">
-                {modelList.map((model) => (
-                  <div
-                    key={model}
-                    className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={(e) => {
-                      setModelName(model);
-                      setAgentData((prev) => ({
-                        ...prev,
-                        modelName: model,
-                        llmDetails: { ...prev.llmDetails, model },
-                      }));
-                      toggleDropdown("model");
-                    }}
-                  >
-                    <img
-                      src={getModelImage(model)}
-                      alt={model}
-                      className="w-5 h-5 rounded-full"
-                    />
-                    <span className="text-sm">{model}</span>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Voice Dropdown */}
@@ -1020,13 +528,31 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
                   <div
                     key={voice.voice_id}
                     className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 cursor-pointer"
-                    onClick={() => {
-                      setSelectedVoiceId(voice.voice_id);
-                      setAgentData((prev) => ({
-                        ...prev,
-                        voice_id: voice.voice_id,
-                      }));
-                      toggleDropdown("agent");
+                    onClick={async () => {
+                      try {
+                        setSelectedVoiceId(voice.voice_id);
+
+                        // ✅ Only use setAgentData if it's passed
+                        if (typeof setAgentData === "function") {
+                          setAgentData((prev) => ({
+                            ...prev,
+                            voice_id: voice.voice_id,
+                          }));
+                        }
+
+                        toggleDropdown("agent");
+
+                        await axios.put(
+                          `${process.env.NEXT_PUBLIC_API_URL}/api/agent/agent/update/${agent.agent_id}`,
+                          {
+                            voice_id: voice.voice_id,
+                          }
+                        );
+
+                        console.log("Voice updated successfully");
+                      } catch (err) {
+                        console.error("Failed to update voice", err);
+                      }
                     }}
                   >
                     <img
@@ -1045,7 +571,7 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
           <div className="relative">
             <button
               className="flex items-center gap-2 border rounded px-3 py-1 text-sm bg-white shadow-sm"
-              onClick={() => toggleDropdown("language")}
+              // onClick={() => toggleDropdown("language")}
             >
               <span>
                 {Array.isArray(languages)
@@ -1053,26 +579,26 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
                       ?.name || "Select Language"
                   : "Select Language"}
               </span>
-              {dropdowns?.language ? (
+              {/* {dropdowns?.language ? (
                 <ChevronUp size={16} />
               ) : (
                 <ChevronDown size={16} />
-              )}
+              )} */}
             </button>
             {dropdowns?.language && (
-              <div className="absolute mt-1 w-64 bg-white border rounded shadow z-10 max-h-60 overflow-y-auto">
+              <div className="absolute mt-1 w-64 bg-white border rounded shadow z-10 max-h-60 overflow-y-auto ">
                 {languages.map((lang) => (
                   <div
                     key={lang.locale}
                     className="px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
-                    onClick={() => {
-                      setSelectedLanguage(lang.locale);
-                      setAgentData((prev) => ({
-                        ...prev,
-                        language: lang.locale,
-                      }));
-                      toggleDropdown("language");
-                    }}
+                    // onClick={() => {
+                    //   setSelectedLanguage(lang.locale);
+                    //   setAgentData((prev) => ({
+                    //     ...prev,
+                    //     language: lang.locale,
+                    //   }));
+                    //   toggleDropdown("language");
+                    // }}
                   >
                     {lang.name}
                   </div>
@@ -1080,6 +606,48 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
               </div>
             )}
           </div>
+        </div>
+        <div className="relative">
+          <button
+            className="flex items-center gap-2 border rounded px-3 py-1 text-sm bg-white shadow-sm"
+            onClick={() => toggleDropdown("variables")}
+          >
+            <Plus size={16} />
+            <span>Variables</span>
+            {dropdowns?.variables ? (
+              <ChevronUp size={16} />
+            ) : (
+              <ChevronDown size={16} />
+            )}
+          </button>
+          {dropdowns?.variables && (
+            <div
+              className="absolute mt-1 w-64 bg-white border rounded shadow z-10 max-h-60 overflow-y-auto"
+              style={{ zIndex: "9999" }}
+            >
+              {parsedVariables.map((v) => (
+                <div
+                  key={v.name}
+                  className="flex flex-col gap-1 px-4 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                >
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold">{v.name}</span>
+                    <button onClick={() => insertVariableAtCursor(v.name)}>
+                      <Plus
+                        size={14}
+                        className="text-green-600 hover:text-green-800"
+                      />
+                    </button>
+                  </div>
+                  <div className="text-gray-500 truncate text-xs">
+                    {Array.isArray(v.value)
+                      ? v.value.map((s) => s.service || s).join(", ")
+                      : v.value ?? ""}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Prompt Section */}
@@ -1099,15 +667,46 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
           </Button>
         </div>
 
-        <Textarea
-          value={isDynamicView ? dynamicPrompt : prompt}
-          onChange={(e) => {
-            if (!isDynamicView) setPrompt(e.target.value);
-          }}
-          readOnly={isDynamicView}
-          className="min-h-[300px] text-sm font-mono"
-          placeholder="Enter system prompt here..."
-        />
+        {isDynamicView ? (
+          <div
+            className="min-h-[60vh] max-h-[60vh] overflow-y-auto p-4 border rounded text-sm font-mono bg-gray-50 whitespace-pre-wrap"
+            dangerouslySetInnerHTML={{
+              __html: liveDynamicPrompt.replace(
+                /{{(.*?)}}/g,
+                (_match, p1) =>
+                  `<span class="font-semibold text-green-600">${p1}</span>`
+              ),
+            }}
+          />
+        ) : (
+          <div className="relative min-h-[60vh] max-h-[60vh] overflow-y-auto border rounded">
+            {/* Highlighted version underneath (colored text) */}
+            <pre
+              aria-hidden="true"
+              className="absolute inset-0 z-0 p-4 text-sm font-mono bg-white text-black whitespace-pre-wrap pointer-events-none"
+              dangerouslySetInnerHTML={{
+                __html: prompt
+                  .replace(/&/g, "&amp;")
+                  .replace(/</g, "&lt;")
+                  .replace(/>/g, "&gt;")
+                  .replace(
+                    /{{(.*?)}}/g,
+                    '<span class="bg-yellow-100 text-yellow-700 font-semibold rounded px-1">$&</span>'
+                  ),
+              }}
+            />
+
+            {/* Editable textarea on top (transparent text, visible caret) */}
+            <textarea
+              ref={textareaRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              className="absolute inset-0 z-10 w-full h-full resize-none p-4 text-sm font-mono bg-transparent text-transparent caret-black whitespace-pre-wrap overflow-y-auto focus:outline-none"
+              placeholder="Enter system prompt here..."
+              spellCheck={false}
+            />
+          </div>
+        )}
 
         <div className="flex justify-between items-center mt-4">
           <span className="text-sm text-gray-500">
@@ -1118,253 +717,228 @@ console.log(knowledge_base_texts,"knowledge_base_texts")
               Reset
             </Button>
             <Button
-  onClick={async () => {
-    try {
-      await axios.put(`${URL}/api/agent/llmprompt/update/${agent.llmId}`, {llmId:agent.llmId, prompt });
-      alert("Prompt saved!");
-    } catch (err) {
-      console.error("Failed to save prompt:", err);
-      alert("Save failed");
-    }
-  }}
->
-  Save Prompt
-</Button>
+              onClick={async () => {
+                try {
+                  const res = await axios.put(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/agent/llmprompt/update/${agent.llmId}`,
+                    { llmId: agent.llmId, prompt }
+                  );
+                  if (res.data.status === true)
+                    Swal.fire("Prompt Updated Successfully");
+                } catch (err) {
+                  console.error("Failed to save prompt:", err);
+                  alert("Save failed");
+                }
+              }}
+            >
+              Save Prompt
+            </Button>
           </div>
         </div>
         {showAddKnowledgeModal && (
-  <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
-    <div className="bg-white rounded-lg p-6 shadow-lg w-[500px] max-h-[90vh] overflow-y-auto">
-      <h3 className="text-lg font-semibold mb-4">Add Knowledge Base</h3>
+          <div className="fixed inset-0 bg-black bg-opacity-30 z-50 flex items-center justify-center">
+            <div className="bg-white rounded-lg p-6 shadow-lg w-[500px] max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4">Add Knowledge Base</h3>
 
-      {/* Knowledge Base Name */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium">Knowledge Base Name</label>
-        <Input
-          value={newKnowledgeName}
-          onChange={(e) => setNewKnowledgeName(e.target.value)}
-          placeholder="Enter knowledge base name"
-        />
-      </div>
+              {/* Knowledge Base Name */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium">
+                  Knowledge Base Name
+                </label>
+                <Input
+                  value={newKnowledgeName}
+                  onChange={(e) => setNewKnowledgeName(e.target.value)}
+                  placeholder="Enter knowledge base name"
+                />
+              </div>
 
-      {/* Business Type */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium">Business Type</label>
-        <Select
-          onValueChange={(val) => {
-            if (val === "Other") {
-              setSelectedType("Other");
-              setForm((prev) => ({
-                ...prev,
-                businessType: "",
-                businessSubtype: "",
-                businessIcon: "",
-                services: [],
-                customBuisness: "",
-              }));
-            } else {
-              const selected = businessTypes.find((b) => b.type === val);
-              setSelectedType(val);
-              setForm((prev) => ({
-                ...prev,
-                businessType: val,
-                businessSubtype: selected?.subtype || "",
-                businessIcon: selected?.icon || "",
-                services: [],
-                customBuisness: "",
-              }));
-            }
-          }}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select type" />
-          </SelectTrigger>
-          <SelectContent>
-            <div className="px-2 py-1">
-              <Input
-                placeholder="Search business..."
-                value={businessSearch}
-                onChange={(e) => setBusinessSearch(e.target.value)}
-                className="mb-2"
-              />
+              {/* + Add Options */}
+              {newKnowledgeName.trim() !== "" && (
+                <div className="mb-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAddOptions(!showAddOptions)}
+                  >
+                    + Add
+                  </Button>
+
+                  {showAddOptions && (
+                    <div className="mt-2 space-y-3 border p-3 rounded-md bg-gray-50">
+                      {/* Add URL */}
+                      <div>
+                        <label className="text-sm font-medium">
+                          Website URL
+                        </label>
+                        <div className="relative w-full">
+                          <Input
+                            placeholder="https://example.com"
+                            value={form.businessUrl || ""}
+                            onChange={(e) => {
+                              setForm({ ...form, businessUrl: e.target.value });
+                              setIsWebsiteValid(null);
+                            }}
+                            onBlur={handleWebsiteBlur}
+                          />
+                          {isVerifying && (
+                            <span className="absolute right-2 top-2 text-xs text-blue-500">
+                              Verifying...
+                            </span>
+                          )}
+                          {isWebsiteValid === true && (
+                            <span className="absolute right-2 top-2 text-xs text-green-600">
+                              ✓ Valid
+                            </span>
+                          )}
+                          {isWebsiteValid === false && (
+                            <span className="absolute right-2 top-2 text-xs text-red-600">
+                              ✗ Invalid
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Add Files */}
+                      <div>
+                        <label className="text-sm font-medium">
+                          Upload Files
+                        </label>
+                        <Input
+                          type="file"
+                          multiple
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={(e) =>
+                            setUploadedFiles([...e.target.files])
+                          }
+                        />
+                      </div>
+
+                      {/* Add Text */}
+                      <div>
+                        <label className="text-sm font-medium">
+                          Paste Text
+                        </label>
+                        <textarea
+                          rows={4}
+                          className="w-full p-2 border rounded text-sm"
+                          placeholder="Paste business content here..."
+                          value={customText}
+                          onChange={(e) => setCustomText(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Footer Buttons */}
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setShowAddKnowledgeModal(false);
+                    setNewKnowledgeName("");
+                    setShowAddOptions(false);
+                    setForm({ ...form, businessUrl: "" });
+                    setCustomText("");
+                    setUploadedFiles([]);
+                  }}
+                >
+                  Cancel
+                </Button>
+
+                <Button
+                  onClick={async () => {
+                    const API_KEY = "Bearer YOUR_RETELL_API_KEY"; // Replace this
+                    const API_BASE_URL = "https://api.retellai.com/v1";
+
+                    const texts = customText.trim()
+                      ? [{ title: "Custom Text", text: customText.trim() }]
+                      : [];
+
+                    const urls = form.businessUrl?.trim()
+                      ? [form.businessUrl.trim()]
+                      : [];
+
+                    const files = uploadedFiles?.length ? uploadedFiles : [];
+
+                    const formData = new FormData();
+
+                    texts.forEach((t, i) => {
+                      formData.append(
+                        `knowledge_base_texts[${i}][title]`,
+                        t.title
+                      );
+                      formData.append(
+                        `knowledge_base_texts[${i}][text]`,
+                        t.text
+                      );
+                    });
+
+                    urls.forEach((url, i) => {
+                      formData.append(`knowledge_base_urls[${i}]`, url);
+                    });
+
+                    files.forEach((file) => {
+                      formData.append("knowledge_base_files", file);
+                    });
+
+                    try {
+                      if (agent.knowledgeBaseId) {
+                        // ✅ Add sources to existing KB
+                        await axios.post(
+                          `${API_BASE_URL}/knowledge-bases/${agent.knowledgeBaseId}/sources`,
+                          formData,
+                          {
+                            headers: {
+                              Authorization: API_KEY,
+                              "Content-Type": "multipart/form-data",
+                            },
+                          }
+                        );
+                      } else {
+                        // 🆕 Create new KB
+                        formData.append(
+                          "knowledge_base_name",
+                          newKnowledgeName.trim()
+                        );
+
+                        const res = await axios.post(
+                          `${API_BASE_URL}/knowledge-bases`,
+                          formData,
+                          {
+                            headers: {
+                              Authorization: API_KEY,
+                              "Content-Type": "multipart/form-data",
+                            },
+                          }
+                        );
+
+                        const newKBId = res.data.knowledge_base_id;
+                        // 🔁 Optionally update agent or store KB ID in DB/state
+                        console.log("New KB created:", newKBId);
+                      }
+
+                      setKnowledgeBases((prev) => [
+                        ...prev,
+                        newKnowledgeName.trim(),
+                      ]);
+                      setShowAddKnowledgeModal(false);
+                      setNewKnowledgeName("");
+                      setShowAddOptions(false);
+                      setForm({ ...form, businessUrl: "" });
+                      setCustomText("");
+                      setUploadedFiles([]);
+                    } catch (err) {
+                      console.error("Failed to add/create KB:", err);
+                    }
+                  }}
+                >
+                  Add Knowledge Base
+                </Button>
+              </div>
             </div>
-
-            {businessTypes
-              .filter((b) =>
-                `${b.type} ${b.subtype}`.toLowerCase().includes(businessSearch.toLowerCase())
-              )
-              .map((b) => (
-                <SelectItem key={b.type} value={b.type}>
-                  {b.type} - {b.subtype}
-                </SelectItem>
-              ))}
-            {!businessTypes.some((b) => b.type.toLowerCase() === "other") && (
-              <SelectItem value="Other">Other</SelectItem>
-            )}
-          </SelectContent>
-        </Select>
-
-        {selectedType === "Other" && (
-          <Input
-            placeholder="Add new business type"
-            value={newBusinessType}
-            onChange={(e) => setNewBusinessType(e.target.value)}
-            onBlur={() => {
-              if (
-                newBusinessType &&
-                !businessTypes.some(
-                  (b) => b.type.toLowerCase() === newBusinessType.toLowerCase()
-                )
-              ) {
-                const newBusiness = {
-                  type: newBusinessType,
-                  subtype: "Custom",
-                  icon: "svg/Web-Design-Agency-icon.svg",
-                };
-                setBusinessTypes((prev) => [...prev, newBusiness]);
-                setForm((prev) => ({
-                  ...prev,
-                  businessType: newBusinessType,
-                  businessSubtype: "Custom",
-                  businessIcon: newBusiness.icon,
-                }));
-              }
-              setNewBusinessType("");
-            }}
-            className="mt-2"
-          />
-        )}
-      </div>
-
-      {/* Business Size */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium">Business Size</label>
-        <select
-          className="w-full border rounded px-3 py-2 text-sm"
-          value={businessSize}
-          onChange={(e) => setBusinessSize(e.target.value)}
-        >
-          <option value="" disabled>Select Business Size</option>
-          <option value="1 to 10 employees">1 to 10 employees</option>
-          <option value="10 to 50 employees">10 to 50 employees</option>
-          <option value="50 to 100 employees">50 to 100 employees</option>
-          <option value="100 to 250 employees">100 to 250 employees</option>
-          <option value="250 to 500 employees">250 to 500 employees</option>
-          <option value="500 to 1000 employees">500 to 1000 employees</option>
-          <option value="1000+ employees">1000+ employees</option>
-        </select>
-      </div>
-
-      {/* Services */}
-      <div className="mb-4">
-        <label className="block text-sm font-medium">Select Services</label>
-        {(allServices[selectedType] || []).map((service) => (
-          <div key={service} className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.services?.includes(service)}
-              onChange={() => {
-                const current = form.services || [];
-                const updated = current.includes(service)
-                  ? current.filter((s) => s !== service)
-                  : [...current, service];
-                setForm((prev) => ({ ...prev, services: updated }));
-              }}
-            />
-            <span>{service}</span>
-          </div>
-        ))}
-
-        {!((allServices[selectedType] || []).includes("Other")) && (
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              checked={form.services?.includes("Other")}
-              onChange={() => {
-                const current = form.services || [];
-                const updated = current.includes("Other")
-                  ? current.filter((s) => s !== "Other")
-                  : [...current, "Other"];
-                setForm((prev) => ({ ...prev, services: updated }));
-              }}
-            />
-            <span>Other</span>
           </div>
         )}
-
-        {form.services?.includes("Other") && (
-          <Input
-            placeholder="Add new service"
-            value={newService}
-            onChange={(e) => setNewService(e.target.value)}
-            onBlur={() => {
-              if (
-                newService &&
-                !(allServices[selectedType] || []).includes(newService)
-              ) {
-                const updatedServices = [...(allServices[selectedType] || []), newService];
-                setAllServices((prev) => ({
-                  ...prev,
-                  [selectedType]: updatedServices,
-                }));
-
-                const updatedFormServices = [
-                  ...(form.services || []).filter((s) => s !== "Other"),
-                  newService,
-                ];
-                setForm((prev) => ({
-                  ...prev,
-                  services: updatedFormServices,
-                  customServices: [...(prev.customServices || []), newService],
-                }));
-              }
-              setNewService("");
-            }}
-            className="mt-2"
-          />
-        )}
-      </div>
-
-      {/* Footer Buttons */}
-      <div className="flex justify-end gap-2 pt-4">
-        <Button
-          variant="ghost"
-          onClick={() => {
-            setShowAddKnowledgeModal(false);
-            setNewKnowledgeName("");
-            // Reset form fields if needed
-          }}
-        >
-          Cancel
-        </Button>
-        <Button
-          onClick={async () => {
-            const payload = {
-              knowledgeBaseName: newKnowledgeName,
-              businessType: form.businessType || "Other",
-              businessSize: businessSize || "",
-              services: form.services || [],
-              customServices: form.customServices || [],
-            };
-
-            try {
-              // await axios.post(`${URL}/api/knowledgebase/create`, payload);
-              setKnowledgeBases(prev => [...prev, newKnowledgeName.trim()]);
-              setShowAddKnowledgeModal(false);
-              setNewKnowledgeName("");
-            } catch (err) {
-              console.error("Failed to create knowledge base", err);
-            }
-          }}
-        >
-          Add Knowledge Base
-        </Button>
-      </div>
-    </div>
-  </div>
-)}
-
-
       </div>
     </div>
   );
