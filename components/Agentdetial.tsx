@@ -1146,17 +1146,17 @@ const AddAgentModal = ({
                     className="mb-2"
                   />
                 </div>
-                {allUsers
-                  .filter((u) =>
-                    `${u.name} ${u.email}`
-                      .toLowerCase()
-                      .includes(userSearch.toLowerCase())
-                  )
-                  .map((u) => (
-                    <SelectItem key={u.id} value={u.id}>
-                      {u.name} ({u.email})
-                    </SelectItem>
-                  ))}
+              {allUsers
+  .filter((u) => u.referredBy === localStorage.getItem("referralCode")) // filter by referralCode
+  .filter((u) =>
+    `${u.name} ${u.email}`.toLowerCase().includes(userSearch.toLowerCase())
+  ) // optional search filter
+  .map((u) => (
+    <SelectItem key={u.id} value={u.id}>
+      {u.name} ({u.email})
+    </SelectItem>
+  ))}
+
               </SelectContent>
             </Select>
           </div>

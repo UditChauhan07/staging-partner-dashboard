@@ -96,6 +96,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
         name: u.name ?? "N/A",
         email: u.email ?? "No Email",
         phone: u.phone ?? "N/A",
+        referredBy:u.referredBy??"N/A"
       }));
       console.log(mappedUsers, "mappedUsers");
       setuserList(mappedUsers);

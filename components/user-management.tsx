@@ -11,6 +11,7 @@ import { DeleteConfirmModal } from "./delete-confirm-modal"
 import { retrieveAllRegisteredUsers, deleteUser } from "@/Services/auth"
 import Swal from "sweetalert2"
 import { addUser } from "@/Services/auth"
+import { FadeLoader } from "react-spinners"
 
 interface User {
   id: string
@@ -267,9 +268,27 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
         </Button>
       </div>
       {isLoading ? (
-        <div className="flex justify-center items-center h-[300px]">
-          <div className="animate-spin rounded-full h-10 w-10 border-t-4 border-purple-600 border-solid"></div>
-        </div>
+      
+    
+  
+      <div
+        style={{
+          position: "fixed", // ✅ overlay entire screen
+          top: 0,
+          left: 0,
+          height: "100vh",
+          width: "100vw",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          backgroundColor: "rgba(255, 255, 255, 0.5)", // ✅ 50% white transparent
+          zIndex: 9999, // ✅ ensure it's on top
+        }}
+      >
+        <FadeLoader size={90} color="#6524EB" speedMultiplier={2} />
+      </div>
+  
+  
       ) : (
         <>
           <Card>

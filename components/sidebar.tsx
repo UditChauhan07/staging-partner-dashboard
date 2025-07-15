@@ -1,6 +1,7 @@
 "use client"
-import {Users,LogOut, Menu, X, Headphones,Link2 } from "lucide-react"
+import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Label } from "recharts"
 
 interface SidebarProps {
   activeSection: string
@@ -14,6 +15,8 @@ const navigationItems = [
   { id: "users", label: "User Management", icon: Users },
   { id: "agents", label: "Agent Business List", icon: Headphones },
   { id: "referral", label: "Referral Link", icon: Link2 },
+  {id:"Ownagent",label:"My own agent",icon:UserCheck2},
+  {id:"ProfileDetails",label:"Profile Details",icon:Shield}
 ]
 
 
