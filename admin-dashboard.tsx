@@ -158,7 +158,10 @@ import { AgentDetailView } from "./components/agent-detail-view";
 import { fetchAgentDetailById } from "./Services/auth";
 import { languages } from "./components/languageOptions";
 import { ReferralLink } from "./components/ReferralLink";
-
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import axios from "axios";
+import { ProfileView } from "./components/PofileView";
+import AgentFormSetup from "./components/UrownAgent";
 interface User {
   id: string;
   name: string;
@@ -210,6 +213,13 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
 
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [showProfile, setShowProfile] = useState(false);
+const [adminUser, setAdminUser] = useState({
+  name: "Admin",
+  email: "admin@example.com",
+  address: "123 Main St",
+  profileImage: "",
+});
   const [selectedAgent, setSelectedAgent] = useState<{
     agent: Agent;
     business: Business;
@@ -234,6 +244,16 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
       console.error("Error fetching agent details", err);
     }
   };
+const handleProfileUpdate = async (formData: FormData) => {
+  try {
+    // Send formData to your backend API endpoint
+    await axios.post("/api/update-profile", formData);
+    // Optional: refresh user data from backend
+    alert("Profile updated!");
+  } catch (error) {
+    console.error("Error updating profile", error);
+  }
+};
 
   const handleViewUser = (user: User) => setSelectedUser(user);
   const handleBackToUsers = () => setSelectedUser(null);
@@ -270,6 +290,8 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         />
       );
     }
+    
+  
     switch (activeSection) {
       case "users":
         return <UserManagement onViewUser={handleViewUser} />;
@@ -277,6 +299,11 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         return <AgentBusinessList onViewAgent={handleViewAgent} />;
       case "referral":
         return <ReferralLink />;
+ 
+        case "ProfileDetails":
+          return <ProfileView/>;
+        case "Ownagent":
+          return<AgentFormSetup/>;
       default:
         return <UserManagement onViewUser={handleViewUser} />;
     }
@@ -291,7 +318,12 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
         onToggleCollapse={() => setIsCollapsed((v) => !v)}
         onLogout={onLogout}
       />
-
+{/* <div className="absolute top-4 right-4 z-50">
+  <Avatar onClick={() => setShowProfile(true)} className="cursor-pointer">
+    <AvatarImage src={adminUser.profileImage} />
+    <AvatarFallback>{adminUser.name[0]}</AvatarFallback>
+  </Avatar>
+</div> */}
       <main
         className={`transition-all duration-300 ${
           isCollapsed ? "ml-16" : "ml-64"

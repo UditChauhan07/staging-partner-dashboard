@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import "react-country-state-city/dist/react-country-state-city.css";
+
 
 export const metadata: Metadata = {
   title: 'Rexpt',
