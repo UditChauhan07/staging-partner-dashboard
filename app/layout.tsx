@@ -6,6 +6,9 @@ import "react-country-state-city/dist/react-country-state-city.css";
 export const metadata: Metadata = {
   title: 'Rexpt',
   description: 'Rexpt',
+  icons: {
+    icon: '/rexpt-main.png', 
+  },
 
 }
 
