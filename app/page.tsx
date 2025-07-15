@@ -33,6 +33,7 @@ export default function Page() {
       localStorage.setItem("token", result.token)
       localStorage.setItem("userId", result.userId)
       localStorage.setItem("referralCode", result.referralCode)
+      localStorage.setItem("referralName",result.referalName)
 
       // Update login state
       setUser({ email })
