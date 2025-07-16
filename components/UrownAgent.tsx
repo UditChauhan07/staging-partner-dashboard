@@ -8,6 +8,7 @@ import { Play, Pause } from "lucide-react";
 import { createAgent, getRetellVoices } from "@/Services/auth";
 import { languages } from "./languageOptions";
 import { AlertTitle } from "./ui/alert";
+import Swal from "sweetalert2";
 
 const avatars = {
   Male: [
@@ -83,6 +84,22 @@ export default function AgentFormSetup() {
 
   const handleSubmit = async () => {
    const userId=localStorage.getItem("userId")
+   if(!form.language){
+    Swal.fire("Please Select Language first")
+    return;
+   }
+   if(!form.gender){
+    Swal.fire("Select Gender first")
+    return;
+   }
+   if(!form.voice){
+    Swal.fire("Please choose voice")
+    return;
+   }
+   if(!form.avatar){
+    Swal.fire("Please Select avatar")
+    return;
+   }
     try {
       const {
         language,
@@ -444,7 +461,7 @@ Assistant: “RexPT acts like your smart front-desk—it answers every call, cap
       </div>
 
       {/* Role */}
-      <div className="mb-6">
+      {/* <div className="mb-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Role
         </label>
@@ -465,7 +482,7 @@ Assistant: “RexPT acts like your smart front-desk—it answers every call, cap
             </label>
           ))}
         </div>
-      </div>
+      </div> */}
 
       <Button className="w-full" onClick={handleSubmit}>
      Create
