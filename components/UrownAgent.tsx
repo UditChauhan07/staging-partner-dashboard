@@ -81,249 +81,257 @@ export default function AgentFormSetup() {
 
     current.onended = () => setPlayingIdx(null);
   };
-
-  const handleSubmit = async () => {
-   const userId=localStorage.getItem("userId")
-   if(!form.language){
-    Swal.fire("Please Select Language first")
-    return;
-   }
-   if(!form.gender){
-    Swal.fire("Select Gender first")
-    return;
-   }
-   if(!form.voice){
-    Swal.fire("Please choose voice")
-    return;
-   }
-   if(!form.avatar){
-    Swal.fire("Please Select avatar")
-    return;
-   }
-    try {
-      const {
-        language,
-        gender,
-        voice,
-        agentname,
-        avatar,
-        
-        role,
-      } = form;
-      console.log(voice, "voice");
-
-      const promptVars = {
-        agentName: form.selectedVoice?.voice_name || "Virtual Assistant",
-        agentGender: form.gender,
-      
-        languageSelect: language,
-       
-      };
-    //   const aboutBusinessForm =
-    //     localStorage.getItem("businessonline") || form.about || "";
-
-    //   const filledPrompt = getAgentPrompt({
-    //     industryKey: businessType === "Other" ? customBuisness : businessType,
-    //     roleTitle: selectedRole,
-    //     agentName: knowledgebaseName,
-    //     agentGender: gender,
-    //     business: {
-    //       businessName: businessName || "Your Business",
-    //       email: email || "",
-    //       aboutBusiness: about || "", // this can remain for context
-    //       address: address || "",
-    //     },
-    //     languageSelect: "Multi",
-    //     businessType,
-    //     aboutBusinessForm, // this will now work fine
-    //     commaSeparatedServices: services?.join(", ") || "",
-    //     agentNote: "",
-    //     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    //   });
-    //   const filledPrompt2 = getAgentPrompt({
-    //     industryKey: "{{businessType}}",
-    //     roleTitle: "{{selectedRole}}",
-    //     agentName: "{{AgentName}}",
-    //     agentGender: "{{gender}}",
-    //     business: {
-    //       businessName: "{{businessName}}",
-    //       email: "{{email}}",
-    //       aboutBusiness: "{{about}}", // this can remain for context
-    //       address: "{{address}}",
-    //     },
-    //     languageSelect: "{{language}}",
-    //     businessType: "{{businessType}}",
-    //     aboutBusinessForm: {
-    //       businessUrl: "{{businesssURl}}",
-    //       about: "{{About Business}}",
-    //     }, // this will now work fine
-    //     commaSeparatedServices: "{{services}}",
-    //     agentNote: "",
-    //     timeZone: "{{timeZone}}",
-    //   });
-
-    //   console.log("generatePrompt", filledPrompt2);
-const filledPrompt = `
-You are a Virtual Assistant for DesignersX, specializing in advanced customer engagement tools. Your task is to introduce and explain RexPT, an AI-driven virtual receptionist and call-answering solution, tailored for design-focused businesses.
-
-Role & Tone  
-You are polite, professional, and design-savvy.  
-Think of yourself as a trusted assistant who understands the unique needs of design teams—branding, user experience, client communication.
-
-Product (RexPT) Overview  
-RexPT is an AI Virtual Receptionist that handles inbound calls seamlessly.  
-It engages leads instantly, books meetings/calendar events automatically, and offers actionable insights through call analytics (https://www.rexpt.in).  
-It revolutionizes front-desk operations by replacing manual reception tasks with smart, automated workflows.
-
-Your Goals  
-1. Clearly explain how RexPT helps design teams manage client calls—for inquiries, appointment scheduling, and lead nurturing—without missing a beat.  
-2. Highlight benefits: 24/7 availability, seamless calendar integration, freeing up designers to focus on creativity & project delivery.  
-3. Reference RexPT’s features (lead engagement, calendar booking, call analytics) succinctly.  
-4. Use a friendly but knowledgeable tone, aligning with DesignersX brand voice.
-
-Sample Interaction  
-User: “What can RexPT do for my design agency?”  
-Assistant: “RexPT acts like your smart front-desk—it answers every call, captures client details, auto-schedules meetings, and delivers call analytics so you never miss an opportunity—all while you focus on creative work.”
-`;
-      const agentConfig = {
-        version: 0,
-        model: "gemini-2.0-flash-lite",
-        model_temperature: 0,
-        model_high_priority: true,
-        tool_call_strict_mode: true,
-        general_prompt: filledPrompt,
-        general_tools: [],
-        starting_state: "information_collection",
-        // begin_message: `Hi I’m ${promptVars.agentName}, calling from ${promptVars.business.businessName}. How may I help you?`,
-        default_dynamic_variables: {
-          customer_name: "John Doe",
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        },
-        states: [
-          {
-            name: "information_collection",
-            state_prompt: "## Task\nGreet the user and ask how you can help.",
-            script: `
-        if (wait_for_user_input) {
-          speak("How can I assist you today?");
-          wait_for_user_input();
-        }
-      `,
-            edges: [],
-          },
-        ],
-      };
-
-      const llmRes = await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/agent/createAdmin/llm`,
-        agentConfig,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_RETELL_API}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      console.log(llmRes);
-      const llmId = llmRes.data.data.llm_id;
-      console.log(llmId);
-
-      const finalAgentData = {
-        response_engine: { type: "retell-llm", llm_id: llmId },
-        voice_id: voice,
-        // language,
-        agent_name: form.selectedVoice?.voice_name || "Virtual Assistant",
-        language: "multi",
-        post_call_analysis_model: "gpt-4o-mini",
-        responsiveness: 1,
-        enable_backchannel: true,
-        interruption_sensitivity: 0.91,
-        normalize_for_speech: true,
-        backchannel_frequency: 0.7,
-        backchannel_words: [
-          "Got it",
-          "Yeah",
-          "Uh-huh",
-          "Understand",
-          "Ok",
-          "hmmm",
-        ],
-        post_call_analysis_data: [
-          {
-            type: "string",
-            name: "Detailed Call Summary",
-            description: "Summary of the customer call",
-          },
-          {
-            type: "enum",
-            name: "lead_type",
-            description: "Customer feedback",
-            choices: ["positive", "neutral", "negative"],
-          },
-        ],
-      };
-      console.log(finalAgentData);
-
-      const agentRes = await axios.post(
-        "https://api.retellai.com/create-agent",
-        finalAgentData,
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.NEXT_PUBLIC_RETELL_API}`,
-          },
-        }
-      );
-
-      const agentId = agentRes.data.agent_id;
-
-      const dbPayload = {
-        userId,
-        agent_id: agentId,
-        llmId,
-        avatar,
-        agentVoice: voice,
-        knowledgebaseId: localStorage.getItem("knowledgeBaseId"),
-        agentAccent: form.selectedVoice?.voice_accent || "American",
-        agentRole: selectedRole,
-        agentName: form.selectedVoice?.voice_name || "Virtual Assistant",
-        agentLanguageCode: language,
-        agentLanguage: language,
-        dynamicPromptTemplate: filledPrompt,
-        rawPromptTemplate: filledPrompt,
-        agentGender: gender,
-        agentPlan: "Partner",
-        agentStatus: true,
-        businessId: localStorage.getItem("BusinessId"),
-        additionalNote: "",
-      };
-
-      const saveRes = await createAgent(dbPayload);
-      if (saveRes.status === 200 || saveRes.status === 201) {
-        alert("Agent created successfully!");
-        localStorage.removeItem("businessType");
-        localStorage.removeItem("agentCode");
-        localStorage.removeItem("");
-        // onClose();
-      } else {
-        throw new Error("Agent creation failed.");
-      }
-    } catch (err) {
-      console.error("Error:", err);
-      alert("Agent creation failed. Please check console for details.");
-    } finally {
-        alert("something wrong")
-    }
+const handleSubmit=()=>{
+  Swal.fire({
+    title: "Coming Soon!",
+    text: "This feature is under development. Please check back later.",
+    icon: "info",   
+  })
 }
+//   const handleSubmit = async () => {
+//    const userId=localStorage.getItem("userId")
+//    if(!form.language){
+//     Swal.fire("Please Select Language first")
+//     return;
+//    }
+//    if(!form.gender){
+//     Swal.fire("Select Gender first")
+//     return;
+//    }
+//    if(!form.voice){
+//     Swal.fire("Please choose voice")
+//     return;
+//    }
+//    if(!form.avatar){
+//     Swal.fire("Please Select avatar")
+//     return;
+//    }
+//     try {
+//       const {
+//         language,
+//         gender,
+//         voice,
+//         agentname,
+//         avatar,
+        
+//         role,
+//       } = form;
+//       console.log(voice, "voice");
+
+//       const promptVars = {
+//         agentName: form.selectedVoice?.voice_name || "Virtual Assistant",
+//         agentGender: form.gender,
+      
+//         languageSelect: language,
+       
+//       };
+//     //   const aboutBusinessForm =
+//     //     localStorage.getItem("businessonline") || form.about || "";
+
+//     //   const filledPrompt = getAgentPrompt({
+//     //     industryKey: businessType === "Other" ? customBuisness : businessType,
+//     //     roleTitle: selectedRole,
+//     //     agentName: knowledgebaseName,
+//     //     agentGender: gender,
+//     //     business: {
+//     //       businessName: businessName || "Your Business",
+//     //       email: email || "",
+//     //       aboutBusiness: about || "", // this can remain for context
+//     //       address: address || "",
+//     //     },
+//     //     languageSelect: "Multi",
+//     //     businessType,
+//     //     aboutBusinessForm, // this will now work fine
+//     //     commaSeparatedServices: services?.join(", ") || "",
+//     //     agentNote: "",
+//     //     timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+//     //   });
+//     //   const filledPrompt2 = getAgentPrompt({
+//     //     industryKey: "{{businessType}}",
+//     //     roleTitle: "{{selectedRole}}",
+//     //     agentName: "{{AgentName}}",
+//     //     agentGender: "{{gender}}",
+//     //     business: {
+//     //       businessName: "{{businessName}}",
+//     //       email: "{{email}}",
+//     //       aboutBusiness: "{{about}}", // this can remain for context
+//     //       address: "{{address}}",
+//     //     },
+//     //     languageSelect: "{{language}}",
+//     //     businessType: "{{businessType}}",
+//     //     aboutBusinessForm: {
+//     //       businessUrl: "{{businesssURl}}",
+//     //       about: "{{About Business}}",
+//     //     }, // this will now work fine
+//     //     commaSeparatedServices: "{{services}}",
+//     //     agentNote: "",
+//     //     timeZone: "{{timeZone}}",
+//     //   });
+
+//     //   console.log("generatePrompt", filledPrompt2);
+// const filledPrompt = `
+// You are a Virtual Assistant for DesignersX, specializing in advanced customer engagement tools. Your task is to introduce and explain RexPT, an AI-driven virtual receptionist and call-answering solution, tailored for design-focused businesses.
+
+// Role & Tone  
+// You are polite, professional, and design-savvy.  
+// Think of yourself as a trusted assistant who understands the unique needs of design teams—branding, user experience, client communication.
+
+// Product (RexPT) Overview  
+// RexPT is an AI Virtual Receptionist that handles inbound calls seamlessly.  
+// It engages leads instantly, books meetings/calendar events automatically, and offers actionable insights through call analytics (https://www.rexpt.in).  
+// It revolutionizes front-desk operations by replacing manual reception tasks with smart, automated workflows.
+
+// Your Goals  
+// 1. Clearly explain how RexPT helps design teams manage client calls—for inquiries, appointment scheduling, and lead nurturing—without missing a beat.  
+// 2. Highlight benefits: 24/7 availability, seamless calendar integration, freeing up designers to focus on creativity & project delivery.  
+// 3. Reference RexPT’s features (lead engagement, calendar booking, call analytics) succinctly.  
+// 4. Use a friendly but knowledgeable tone, aligning with DesignersX brand voice.
+
+// Sample Interaction  
+// User: “What can RexPT do for my design agency?”  
+// Assistant: “RexPT acts like your smart front-desk—it answers every call, captures client details, auto-schedules meetings, and delivers call analytics so you never miss an opportunity—all while you focus on creative work.”
+// `;
+//       const agentConfig = {
+//         version: 0,
+//         model: "gemini-2.0-flash-lite",
+//         model_temperature: 0,
+//         model_high_priority: true,
+//         tool_call_strict_mode: true,
+//         general_prompt: filledPrompt,
+//         general_tools: [],
+//         starting_state: "information_collection",
+//         // begin_message: `Hi I’m ${promptVars.agentName}, calling from ${promptVars.business.businessName}. How may I help you?`,
+//         default_dynamic_variables: {
+//           customer_name: "John Doe",
+//           timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+//         },
+//         states: [
+//           {
+//             name: "information_collection",
+//             state_prompt: "## Task\nGreet the user and ask how you can help.",
+//             script: `
+//         if (wait_for_user_input) {
+//           speak("How can I assist you today?");
+//           wait_for_user_input();
+//         }
+//       `,
+//             edges: [],
+//           },
+//         ],
+//       };
+
+//       const llmRes = await axios.post(
+//         `${process.env.NEXT_PUBLIC_API_URL}/api/agent/createAdmin/llm`,
+//         agentConfig,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${process.env.NEXT_PUBLIC_RETELL_API}`,
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
+//       console.log(llmRes);
+//       const llmId = llmRes.data.data.llm_id;
+//       console.log(llmId);
+
+//       const finalAgentData = {
+//         response_engine: { type: "retell-llm", llm_id: llmId },
+//         voice_id: voice,
+//         // language,
+//         agent_name: form.selectedVoice?.voice_name || "Virtual Assistant",
+//         language: "multi",
+//         post_call_analysis_model: "gpt-4o-mini",
+//         responsiveness: 1,
+//         enable_backchannel: true,
+//         interruption_sensitivity: 0.91,
+//         normalize_for_speech: true,
+//         backchannel_frequency: 0.7,
+//         backchannel_words: [
+//           "Got it",
+//           "Yeah",
+//           "Uh-huh",
+//           "Understand",
+//           "Ok",
+//           "hmmm",
+//         ],
+//         post_call_analysis_data: [
+//           {
+//             type: "string",
+//             name: "Detailed Call Summary",
+//             description: "Summary of the customer call",
+//           },
+//           {
+//             type: "enum",
+//             name: "lead_type",
+//             description: "Customer feedback",
+//             choices: ["positive", "neutral", "negative"],
+//           },
+//         ],
+//       };
+//       console.log(finalAgentData);
+
+//       const agentRes = await axios.post(
+//         "https://api.retellai.com/create-agent",
+//         finalAgentData,
+//         {
+//           headers: {
+//             Authorization: `Bearer ${process.env.NEXT_PUBLIC_RETELL_API}`,
+//           },
+//         }
+//       );
+
+//       const agentId = agentRes.data.agent_id;
+
+//       const dbPayload = {
+//         userId,
+//         agent_id: agentId,
+//         llmId,
+//         avatar,
+//         agentVoice: voice,
+//         knowledgebaseId: localStorage.getItem("knowledgeBaseId"),
+//         agentAccent: form.selectedVoice?.voice_accent || "American",
+//         agentRole: selectedRole,
+//         agentName: form.selectedVoice?.voice_name || "Virtual Assistant",
+//         agentLanguageCode: language,
+//         agentLanguage: language,
+//         dynamicPromptTemplate: filledPrompt,
+//         rawPromptTemplate: filledPrompt,
+//         agentGender: gender,
+//         agentPlan: "Partner",
+//         agentStatus: true,
+//         businessId: localStorage.getItem("BusinessId"),
+//         additionalNote: "",
+//       };
+
+//       const saveRes = await createAgent(dbPayload);
+//       if (saveRes.status === 200 || saveRes.status === 201) {
+//         alert("Agent created successfully!");
+//         localStorage.removeItem("businessType");
+//         localStorage.removeItem("agentCode");
+//         localStorage.removeItem("");
+//         // onClose();
+//       } else {
+//         throw new Error("Agent creation failed.");
+//       }
+//     } catch (err) {
+//       console.error("Error:", err);
+//       alert("Agent creation failed. Please check console for details.");
+//     } finally {
+//         alert("something wrong")
+//     }
+// }
  
 
       
   return (
     <>
     <div className="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
-      <h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
+      <div className="flex " style={{justifyContent:'space-between'}}><h2 className="text-2xl font-semibold mb-6 text-center text-gray-800">
         Create Your Own Agent
       </h2>
-
+      <h1 className="text-xl text-gray-600 mb-4">
+        Coming Soon
+      </h1></div>
       {/* Language */}
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">
