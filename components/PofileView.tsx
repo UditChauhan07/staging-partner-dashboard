@@ -42,13 +42,13 @@ const [confirmPassword, setConfirmPassword] = useState("");
 
 
 
-//   const autocompleteRef = useRef<any>(null);
+  const autocompleteRef = useRef<any>(null);
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
 
-//   const { isLoaded } = useLoadScript({
-//     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-//     libraries: ["places"],
-//   });
+  const { isLoaded } = useLoadScript({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: ["places"],
+  });
 
   // Load Profile
   useEffect(() => {
@@ -238,14 +238,14 @@ const [confirmPassword, setConfirmPassword] = useState("");
 
           <div>
             <Label> Near by place</Label>
-            {/* <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}> */}
+            <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
               <Input
                 id="google-autocomplete"
                 placeholder="Search address or business"
                 value={googleBusiness}
                 onChange={(e) => setGoogleBusiness(e.target.value)}
               />
-            {/* </Autocomplete> */}
+            </Autocomplete>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
