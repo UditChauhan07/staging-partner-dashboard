@@ -442,7 +442,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                       <td className="py-3 px-4 text-gray-600">
                         {row.agentPlan}
                       </td>
-                      <td className="py-3 px-4">
+                      {/* <td className="py-3 px-4">
                         <Button
                           size="sm"
                           variant="outline"
@@ -451,7 +451,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                      </td>
+                      </td> */}
                       <td>
                         <Button
                           size="sm"
