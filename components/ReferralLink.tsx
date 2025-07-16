@@ -9,7 +9,7 @@ export function ReferralLink() {
   useEffect(() => {
     const code = localStorage.getItem("referralCode") || "";
     const referralname=localStorage.getItem('referralName')
-    setFullLink(`https://rexptin.vercel.app?referral/${referralname}`);
+    setFullLink(`https://app.rexpt.in/${referralname}`);
   }, []);
 
   const copyToClipboard = async () => {

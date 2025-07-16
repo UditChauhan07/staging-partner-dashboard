@@ -715,7 +715,9 @@ const AddAgentModal = ({
     }
   }, []);
 
-  const URL = "https://rex-bk.truet.net";
+  // const URL = "https://rex-bk.truet.net";
+const URL = process.env.NEXT_PUBLIC_API_URL 
+// ||"https://rexptin.truet.net";
 
   const fetchKnowledgeBaseName = async () => {
     const name = await getKnowledgeBaseName();

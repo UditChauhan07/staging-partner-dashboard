@@ -6,6 +6,7 @@ import { LoginPage } from "../components/login-page"
 import AdminDashboard from "../admin-dashboard"
 import { adminLogin } from "../Services/auth"
 import Swal from "sweetalert2"
+import { decodeToken, isPartner } from "../utils/authUtils"
 
 export default function Page() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
@@ -16,11 +17,16 @@ export default function Page() {
   // 🔍 Check login status on mount
   useEffect(() => {
     const token = localStorage.getItem("token")
-    if (token) {
-      setIsLoggedIn(true)
+     if (token) {
+      console.log("Token found:", token)
+      if(!isPartner(token)) {
+        Swal.fire("Access Denied", "You do not have permission to access this page.", "error")
+      }else{
+        setIsLoggedIn(true)
+      }
     }
     setLoading(false)
-  }, [])
+  }, [router])
 
   const handleLogin = async (email: string, password: string) => {
     try {
@@ -58,6 +64,7 @@ export default function Page() {
       localStorage.removeItem("token")
       localStorage.removeItem("userId")
       localStorage.removeItem("referralCode")
+      localStorage.clear();
       setUser(null)
       setIsLoggedIn(false)
       Swal.fire("Logged out", "You have been successfully logged out.", "success")

@@ -25,6 +25,8 @@ interface User {
   referredBy?: string
   isUserType?: number
   role?: number | null;
+  referralCode?: string
+  referalName?: string
 }
 
 interface UserManagementProps {
@@ -61,6 +63,8 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
         phone: u.phone ?? "N/A",
         referredBy: u.referredBy,
         isUserType: u.isUserType,
+        referralCode: u.referralCode ?? "N/A",
+        referalName: u.referredByName ?? "N/A",
       }))
       console.log(mappedUsers, "mappedUsers")
       setUsers(mappedUsers)

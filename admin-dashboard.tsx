@@ -171,6 +171,7 @@ interface User {
   lastLogin: string;
   registrationDate: string;
   contactNumber: string;
+  referralCode: string;
 }
 interface Agent {
   id: string;
