@@ -1,6 +1,6 @@
 import axios from "axios";
-// const URL = "http://localhost:2512";
-const URL="https://rex-bk.truet.net"
+const URL = "http://localhost:2512";
+// const URL="https://rex-bk.truet.net"
 // admin login api
 export const adminLogin = async (email, password) => {
     try {

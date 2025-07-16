@@ -715,7 +715,8 @@ const AddAgentModal = ({
     }
   }, []);
 
-  const URL = "https://rex-bk.truet.net";
+  // const URL = "https://rex-bk.truet.net";
+const URL = "http://localhost:2512";
 
   const fetchKnowledgeBaseName = async () => {
     const name = await getKnowledgeBaseName();

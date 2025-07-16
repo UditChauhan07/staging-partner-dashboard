@@ -13,6 +13,7 @@ interface User {
   registrationDate?: string
   phone: string
   referredBy: string
+  referralCode: string
 }
 
 interface UserDetailsProps {
@@ -96,6 +97,10 @@ export function UserDetails({ user, onBack }: UserDetailsProps) {
                 <div>
                   <label className="text-sm font-medium text-gray-500">Contact Number</label>
                   <p className="mt-1 text-gray-900">{user?.phone || "--"}</p>
+                </div>
+                  <div>
+                  <label className="text-sm font-medium text-gray-500">Referral code</label>
+                  <p className="mt-1 text-gray-900">{user?.referralCode || "--"}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">Referred By</label>
