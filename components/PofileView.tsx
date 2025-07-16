@@ -122,7 +122,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
         name,
         email,
         phone,
-        password,
+        
         address: fullAddress,
       });
 
