@@ -11,6 +11,7 @@ import axios from "axios";
 import { Autocomplete, useLoadScript } from "@react-google-maps/api";
 import Swal from "sweetalert2";
 import { FadeLoader } from "react-spinners";
+import { Eye, EyeOff,  } from "lucide-react";
 
 export function ProfileView({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState("");
@@ -29,15 +30,25 @@ export function ProfileView({ onBack }: { onBack: () => void }) {
   const [previewUrl, setPreviewUrl] = useState<string>("/images/defaultiprofile.svg");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
+  const [showOld, setShowOld] = useState(false);
+const [showNew, setShowNew] = useState(false);
+const [showConfirm, setShowConfirm] = useState(false);
+const [changingPassword, setChangingPassword] = useState(false);
+const [showPasswordModal, setShowPasswordModal] = useState(false);
+const [oldPassword, setOldPassword] = useState("");
+const [newPassword, setNewPassword] = useState("");
+const [confirmPassword, setConfirmPassword] = useState("");
 
 
-  const autocompleteRef = useRef<any>(null);
+
+
+//   const autocompleteRef = useRef<any>(null);
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: ["places"],
-  });
+//   const { isLoaded } = useLoadScript({
+//     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+//     libraries: ["places"],
+//   });
 
   // Load Profile
   useEffect(() => {
@@ -166,7 +177,13 @@ export function ProfileView({ onBack }: { onBack: () => void }) {
 
       <Card className="border-none shadow-none">
         <CardContent className="space-y-6 pt-4">
-          <h2 className="text-3xl font-bold border-b pb-4 mb-4">Your Profile</h2>
+          {/* <h2 className="text-3xl font-bold border-b pb-4 mb-4">Your Profile</h2> */}
+          <div className="flex justify-between items-center border-b pb-4 mb-4">
+  <h2 className="text-3xl font-bold">Your Profile</h2>
+  <Button variant="outline"  style={{backgroundColor:'black',color:'white'}} onClick={() => setShowPasswordModal(true)}>
+    Change Password
+  </Button>
+</div>
 
           <div className="flex flex-col sm:flex-row items-center gap-6">
             {/* Profile Image */}
@@ -221,14 +238,14 @@ export function ProfileView({ onBack }: { onBack: () => void }) {
 
           <div>
             <Label> Near by place</Label>
-            <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
+            {/* <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}> */}
               <Input
                 id="google-autocomplete"
                 placeholder="Search address or business"
                 value={googleBusiness}
                 onChange={(e) => setGoogleBusiness(e.target.value)}
               />
-            </Autocomplete>
+            {/* </Autocomplete> */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -254,15 +271,7 @@ export function ProfileView({ onBack }: { onBack: () => void }) {
             </div>
           </div>
 
-          <div>
-            <Label>New Password</Label>
-            <Input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Leave blank to keep current"
-            />
-          </div>
+         
 
           <div className="pt-6 flex justify-end">
             <Button onClick={handleSubmit} disabled={updating}>
@@ -276,6 +285,156 @@ export function ProfileView({ onBack }: { onBack: () => void }) {
               )}
             </Button>
           </div>
+          {showPasswordModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
+      <h2 className="text-xl font-bold mb-4">Change Password</h2>
+
+      <div className="space-y-4">
+  {/* Old Password */}
+  <div>
+    <Label>Old Password</Label>
+    <div className="relative">
+      <Input
+        type={showOld ? "text" : "password"}
+        value={oldPassword}
+        onChange={(e) => setOldPassword(e.target.value)}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+        onClick={() => setShowOld(!showOld)}
+      >
+        {showOld ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+
+  {/* New Password */}
+  <div>
+    <Label>New Password</Label>
+    <div className="relative">
+      <Input
+        type={showNew ? "text" : "password"}
+        value={newPassword}
+        onChange={(e) => setNewPassword(e.target.value)}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+        onClick={() => setShowNew(!showNew)}
+      >
+        {showNew ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+
+  {/* Confirm New Password */}
+  <div>
+    <Label>Confirm New Password</Label>
+    <div className="relative">
+      <Input
+        type={showConfirm ? "text" : "password"}
+        value={confirmPassword}
+        onChange={(e) => setConfirmPassword(e.target.value)}
+        className="pr-10"
+      />
+      <button
+        type="button"
+        className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-500"
+        onClick={() => setShowConfirm(!showConfirm)}
+      >
+        {showConfirm ? <EyeOff size={18} /> : <Eye size={18} />}
+      </button>
+    </div>
+  </div>
+</div>
+
+
+      <div className="flex justify-end gap-3 mt-6">
+        <Button
+          variant="outline"
+          onClick={() => {
+            setShowPasswordModal(false);
+            setOldPassword("");
+            setNewPassword("");
+            setConfirmPassword("");
+          }}
+        >
+          Cancel
+        </Button>
+       <Button
+  disabled={changingPassword}
+  onClick={async () => {
+    if (!oldPassword || !newPassword || !confirmPassword) {
+      return Swal.fire("Please fill all fields.");
+    }
+    if (newPassword !== confirmPassword) {
+      return Swal.fire("New and confirm passwords do not match.");
+    }
+
+    try {
+      setChangingPassword(true);
+
+      const res = await axios.patch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/endusers/updateUserPassword/${userId}`,
+        {
+          oldPassword,
+          newPassword,
+        }
+      );
+
+      if (res.data=true) {
+        Swal.fire({
+  title: "Success!",
+  text: "Password changed successfully.",
+  icon: "success",
+  confirmButtonText: "Great 👍",
+  confirmButtonColor: "#7c3aed", // Tailwind purple-600
+  background: "#f9f5ff", // light lavender background
+  color: "#4c1d95", // deep purple text
+  customClass: {
+    popup: 'rounded-xl shadow-lg',
+    confirmButton: 'px-6 py-2 text-lg font-semibold',
+  },
+});
+
+        setOldPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
+        setShowPasswordModal(false);
+      } 
+    } catch (err: any) {
+  console.error("Password update error:", err);
+
+  const errorMessage =
+    err?.response?.data?.error || // 👈 catch "Old password does not match"
+    err?.response?.data?.message || // optional fallback
+    "Something went wrong";
+
+  Swal.fire("Error", errorMessage, "error");
+     } finally {
+      setChangingPassword(false);
+    }
+  }}
+>
+  {changingPassword ? (
+    <>
+      <Loader2 className="animate-spin h-4 w-4 mr-2" />
+      Changing...
+    </>
+  ) : (
+    "Change Password"
+  )}
+</Button>
+
+      </div>
+    </div>
+  </div>
+)}
+
         </CardContent>
       </Card>
     </div>
