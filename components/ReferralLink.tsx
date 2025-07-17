@@ -9,7 +9,7 @@ export function ReferralLink() {
   useEffect(() => {
     const code = localStorage.getItem("referralCode") || "";
     const referralname=localStorage.getItem('referralName')
-    setFullLink(`https://refer.rexpt.us/${referralname}`);
+    setFullLink(`https://refer.rxpt.us/${referralname}`);
   }, []);
 
   const copyToClipboard = async () => {
