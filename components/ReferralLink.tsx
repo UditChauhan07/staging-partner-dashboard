@@ -9,7 +9,7 @@ export function ReferralLink() {
   useEffect(() => {
     const code = localStorage.getItem("referralCode") || "";
     const referralname=localStorage.getItem('referralName')
-    setFullLink(`https://app.rexpt.in/${referralname}`);
+    setFullLink(`https://refer.rexpt.us/${referralname}`);
   }, []);
 
   const copyToClipboard = async () => {
@@ -57,7 +57,7 @@ export function ReferralLink() {
                   transition
                 "
               />
-              <Copy       onClick={copyToClipboard} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <Copy       onClick={copyToClipboard} className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" />
             </div>
 
             {/* <Button
