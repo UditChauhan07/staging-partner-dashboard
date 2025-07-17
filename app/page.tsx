@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import { LoginPage } from "../components/login-page"
 import AdminDashboard from "../admin-dashboard"
 import { adminLogin } from "../Services/auth"
