@@ -16,7 +16,7 @@ export function ReferralLink() {
     if (!fullLink) return;
     try {
       await navigator.clipboard.writeText(fullLink);
-      toast.success("Referral link copied!");
+      toast.success("Partner Referral link copied!");
     } catch {
       toast.error("Failed to copy. Try again.");
     }
@@ -41,7 +41,7 @@ export function ReferralLink() {
           "
         >
           <h2 className="text-2xl font-semibold text-gray-800 mb-6 text-center">
-            Share Your Referral Link
+            Share Your Partner Referral Link
           </h2>
 
           <div className="flex gap-3">

@@ -14,7 +14,7 @@ interface SidebarProps {
 const navigationItems = [
   { id: "users", label: "User Management", icon: Users },
   { id: "agents", label: "Agent Business List", icon: Headphones },
-  { id: "referral", label: "Referral Link", icon: Link2 },
+  { id: "referral", label: "Partner Referral Link", icon: Link2 },
   {id:"Ownagent",label:"My own agent",icon:UserCheck2},
   {id:"ProfileDetails",label:"Profile Details",icon:Shield}
 ]
