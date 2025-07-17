@@ -174,48 +174,48 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
     setShowConfirm(true);
   };
 
-  const handleConfirmDelete = async () => {
-    if (!selectedAgent) return;
+  // const handleConfirmDelete = async () => {
+  //   if (!selectedAgent) return;
 
-    Swal.fire({
-      title: "Deleting...",
-      text: "Please wait while we delete the agent.",
-      allowOutsideClick: false,
-      didOpen: () => {
-        Swal.showLoading();
-      },
-    });
+  //   Swal.fire({
+  //     title: "Deleting...",
+  //     text: "Please wait while we delete the agent.",
+  //     allowOutsideClick: false,
+  //     didOpen: () => {
+  //       Swal.showLoading();
+  //     },
+  //   });
 
-    try {
-      setLoading(true);
-      await deleteAgent(selectedAgent.agentId);
-      setAgentData((prev) =>
-        prev.filter((agent) => agent.agentId !== selectedAgent.agentId)
-      );
-      setLoading(false);
-      Swal.close();
-      await fetchData();
-      await Swal.fire({
-        icon: "success",
-        title: "Agent deleted",
-        text: `${selectedAgent.agentName} has been removed successfully.`,
-        confirmButtonColor: "#5a1fc0",
-      });
-    } catch (err) {
-      console.error("Failed to delete agent:", err);
-      Swal.close();
-      await Swal.fire({
-        icon: "error",
-        title: "Deletion failed",
-        text: "Something went wrong while deleting the agent.",
-        confirmButtonColor: "#e02424",
-      });
-    } finally {
-      setIsDeleting(false);
-      setShowConfirm(false);
-      setSelectedAgent(null);
-    }
-  };
+  //   try {
+  //     setLoading(true);
+  //     await deleteAgent(selectedAgent.agentId);
+  //     setAgentData((prev) =>
+  //       prev.filter((agent) => agent.agentId !== selectedAgent.agentId)
+  //     );
+  //     setLoading(false);
+  //     Swal.close();
+  //     await fetchData();
+  //     await Swal.fire({
+  //       icon: "success",
+  //       title: "Agent deleted",
+  //       text: `${selectedAgent.agentName} has been removed successfully.`,
+  //       confirmButtonColor: "#5a1fc0",
+  //     });
+  //   } catch (err) {
+  //     console.error("Failed to delete agent:", err);
+  //     Swal.close();
+  //     await Swal.fire({
+  //       icon: "error",
+  //       title: "Deletion failed",
+  //       text: "Something went wrong while deleting the agent.",
+  //       confirmButtonColor: "#e02424",
+  //     });
+  //   } finally {
+  //     setIsDeleting(false);
+  //     setShowConfirm(false);
+  //     setSelectedAgent(null);
+  //   }
+  // };
 
   const handleDeactivateAgent = async (agent: AgentBusinessRow) => {
     if (!agent) return;
@@ -255,14 +255,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
             timer: 1500,
             showConfirmButton: false,
           });
-        } else {
-          setLoading(false);
-          await Swal.fire({
-            icon: "error",
-            title: "Failed",
-            text: response?.msg || "Could not deactivate the agent.",
-          });
-        }
+        } 
       } catch (err) {
         console.error("Error deactivating agent:", err);
         setLoading(false);
@@ -442,7 +435,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                       <td className="py-3 px-4 text-gray-600">
                         {row.agentPlan}
                       </td>
-                      <td className="py-3 px-4">
+                      {/* <td className="py-3 px-4">
                         <Button
                           size="sm"
                           variant="outline"
@@ -451,7 +444,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                         >
                           <Eye className="h-4 w-4" />
                         </Button>
-                      </td>
+                      </td> */}
                       <td>
                         <Button
                           size="sm"
@@ -520,7 +513,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
       <Dialog open={showConfirm} onOpenChange={setShowConfirm}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Agent</DialogTitle>
+            <DialogTitle>Deactivate Agent</DialogTitle>
           </DialogHeader>
           <p>
             Are you sure you want to delete this agent:{" "}
@@ -528,13 +521,13 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
           </p>
 
           <DialogFooter className="flex justify-end gap-2 mt-4">
-            <Button
+            {/* <Button
               variant="destructive"
               onClick={handleConfirmDelete}
               disabled={isDeleting}
             >
               {isDeleting ? "Deleting..." : "Delete"}
-            </Button>
+            </Button> */}
             <Button
               variant="outline"
               onClick={() => {

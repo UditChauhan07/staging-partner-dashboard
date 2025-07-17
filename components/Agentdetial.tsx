@@ -20,6 +20,7 @@ import axios from "axios";
 import { getAgentPrompt } from "@/lib/getAgentPrompt";
 import { getKnowledgeBaseName } from "@/lib/getKnowledgeBaseName";
 import dynamic from "next/dynamic";
+import Swal from "sweetalert2";
 
 interface User {
   id: string;
@@ -800,7 +801,26 @@ const URL = process.env.NEXT_PUBLIC_API_URL
   // }
 
   const handleNext = async () => {
-    if (step === 1 && !form.userId) return alert("Select a user");
+ if (step === 1) {
+  if (!form.userId) return alert("Select a user");
+
+  try {
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/agent/check_user_free_agent/${form.userId}`
+    );
+
+    if (res.data.hasFreeAgent) {
+      return Swal.fire("This user already has a free agent.");
+    }
+
+    // ✅ Move to next step
+     // or your logic to move next
+  } catch (err) {
+    console.error("Error checking free agent:", err);
+    Swal.fire("Error", "Something went wrong while checking agent status.", "error");
+  }
+}
+
     if (step === 2 && !form.businessType)
       return alert("Select at least one business type");
     if (step === 3 && !form.businessName && !form.businessUrl)
