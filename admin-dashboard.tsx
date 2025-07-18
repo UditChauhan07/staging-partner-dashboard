@@ -162,6 +162,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
 import { ProfileView } from "./components/PofileView";
 import AgentFormSetup from "./components/UrownAgent";
+import { AnalyticsSection } from "./components/analytics-section";
+import EarningsTable from "./components/EarningsTable";
 interface User {
   id: string;
   name: string;
@@ -294,13 +296,16 @@ const handleProfileUpdate = async (formData: FormData) => {
     
   
     switch (activeSection) {
+      case "analytics":
+        return <AnalyticsSection/>;
       case "users":
         return <UserManagement onViewUser={handleViewUser} />;
       case "agents":
         return <AgentBusinessList onViewAgent={handleViewAgent} />;
       case "referral":
         return <ReferralLink />;
- 
+ case "EarningsTable" :
+  return <EarningsTable/>;
         case "ProfileDetails":
           return <ProfileView/>;
         case "Ownagent":

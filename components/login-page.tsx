@@ -18,6 +18,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
+  const currentYear = new Date().getFullYear();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!email || !password) {
@@ -121,7 +122,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
         {/* Footer */}
         <div className="text-center mt-8 text-sm text-gray-500 animate-in fade-in-50 duration-700 delay-500">
-          <p>© 2025 rexpt. All rights reserved.</p>
+       <p>© {currentYear} rexpt. All rights reserved.</p>
           <p className="mt-1">Secure admin access for AI receptionist management</p>
         </div>
       </div>

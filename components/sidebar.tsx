@@ -1,5 +1,5 @@
 "use client"
-import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2 } from "lucide-react"
+import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2, Grid2x2Check, Package, Coins, CoinsIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "recharts"
 
@@ -12,11 +12,15 @@ interface SidebarProps {
 }
 
 const navigationItems = [
+  {id:"analytics",label:"Dashboard",icon:Grid2x2Check},
   { id: "users", label: "User Management", icon: Users },
   { id: "agents", label: "Agent Business List", icon: Headphones },
+  
+  {id:"EarningsTable", label:"Partner Earnings",icon:CoinsIcon },
   { id: "referral", label: "Partner Referral Link", icon: Link2 },
-  {id:"Ownagent",label:"My own agent",icon:UserCheck2},
-  {id:"ProfileDetails",label:"Profile Details",icon:Shield}
+  {id:"Ownagent",label:"Partner agent",icon:UserCheck2},
+  {id:"ProfileDetails",label:"Profile Details",icon:Shield},
+
 ]
 
 

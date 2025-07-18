@@ -8,6 +8,7 @@ export const adminLogin = async (email, password) => {
     try {
         const res = await axios.post(`${URL}/api/admin/partner/login`, { email, password });
         return res.data;
+        
     } catch (error) {
         if (error.response?.data?.msg) {
             throw new Error(error.response.data.msg);
@@ -161,3 +162,25 @@ export const countAgentsbyUserId = async (userId) => {
         return 0;
     }
 };
+// export const deleteAgent = async (agentId) => {
+//   try {
+//     const res = await axios.delete(`/agent/deleteAgent/${agentId}`, {
+//       headers: {
+//         Authorization: `Bearer ${process.env.REACT_APP_API_RETELL_API}`,
+//       },
+//     });
+//     await axios.delete(`https://api.retellai.com/delete-agent/${agentId}`, {
+//       headers: {
+//         Authorization: `Bearer ${process.env.REACT_APP_API_RETELL_API}`,
+//       },
+//     });
+
+//     return res.data;
+//   } catch (error) {
+//     console.error(
+//       "Error deleting agent:",
+//       error.response?.data || error.message
+//     );
+//     throw new Error("Failed to delete agent from one or both systems.");
+//   }
+// };
