@@ -30,8 +30,8 @@ const CallTest: React.FC<CallTestProps> = ({
   const displayAgentName =
     agentName && agentName.length > 15 ? agentName.slice(0, 7) + "..." : agentName;
 
-  const displayBusinessName =
-    businessName && businessName.length > 10 ? businessName.slice(0, 15) + "..." : businessName;
+  const displayBusinessName = 'Partner'
+    // businessName && businessName.length > 10 ? businessName.slice(0, 15) + "..." : businessName;
 
   const baseDivClasses =
     "w-full max-w-xs mx-auto rounded-xl flex flex-col items-center justify-center p-4 shadow-md";
@@ -39,10 +39,11 @@ const CallTest: React.FC<CallTestProps> = ({
   const iconTextLayout = "flex flex-row items-center space-x-4";
 
   const phoneIcon = (
-    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-white shadow-md">
+    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-dark shadow-md" style={{background:'green'}}>
       <img src="/svg/Phone-call.svg" alt="Phone Call" className="w-6 h-6" />
     </div>
   );
+  console.log('isEndingRef.current', isEndingRef.current,isCallActive,callLoading);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -55,6 +56,7 @@ const CallTest: React.FC<CallTestProps> = ({
       </div>
 
       {/* Disconnection State */}
+      {/* dsds */}
       {isEndingRef.current ? (
         <div
           className={`${baseDivClasses} bg-red-100 cursor-not-allowed opacity-70 pointer-events-none`}
