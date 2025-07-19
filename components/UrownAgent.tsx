@@ -236,6 +236,7 @@ Google: N/A`,
       // knowledgeFormData.append("knowledgeBaseName",knowledgeBaseName)
     localStorage.setItem("knowledge_Base_ID",knowledge_Base_ID)
       localStorage.getItem("BusinessId");
+      knowledgeFormData.append("agentId",null)
      await axios.patch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/businessDetails/updateKnowledeBase/${businessId}`,
           knowledgeFormData,
