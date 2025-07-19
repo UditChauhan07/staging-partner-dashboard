@@ -555,10 +555,11 @@ Keep the conversation concise and to the point.
         rawPromptTemplate: filledPrompt,
         promptVariablesList: JSON.stringify(promptVariablesList),
         agentGender: form.gender,
-        agentPlan: "Partner",
+        agentPlan: "free",
         agentStatus: true,
         businessId,
         additionalNote: "",
+        agentCreatedBy:"partner"
       };
 
       const saveRes = await createAgent(dbPayload);
@@ -594,12 +595,13 @@ Keep the conversation concise and to the point.
   // Agent Already Exists View
  if (agentExists && agentData) {
   return (
-    <div className="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
+    <div className="max-w-4xl mx-auto mt-10 bg-white shadow-2xl rounded-2xl p-6 border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">
+        <h2 className="text-3xl font-bold text-[#6524EB]">
           Your Partner Agent
         </h2>
+
         {/* More Options Dropdown */}
         <div className="relative">
           <Button
@@ -611,11 +613,11 @@ Keep the conversation concise and to the point.
           </Button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md border z-50">
-              <ul className="py-1 text-sm text-gray-700">
+            <div className="absolute right-0 mt-2 w-60 bg-white shadow-lg rounded-xl border z-50">
+              <ul className="py-2 text-sm text-gray-800">
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowCallModal(true);
                       setShowDropdown(false);
@@ -626,7 +628,7 @@ Keep the conversation concise and to the point.
                 </li>
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowEditModal(true);
                       setShowDropdown(false);
@@ -637,7 +639,7 @@ Keep the conversation concise and to the point.
                 </li>
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setAssignPhoneModal(true);
                       setShowDropdown(false);
@@ -648,7 +650,7 @@ Keep the conversation concise and to the point.
                 </li>
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowCancelConfirm(true);
                       setShowDropdown(false);
@@ -659,7 +661,7 @@ Keep the conversation concise and to the point.
                 </li>
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowDeactivateModal(true);
                       setShowDropdown(false);
@@ -668,17 +670,6 @@ Keep the conversation concise and to the point.
                     🚫 Deactivate Agent
                   </button>
                 </li>
-                {/* <li>
-                  <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left text-red-600"
-                    onClick={() => {
-                      setShowDeleteConfirm(true);
-                      setShowDropdown(false);
-                    }}
-                  >
-                    🗑️ Delete Agent
-                  </button>
-                </li> */}
               </ul>
             </div>
           )}
@@ -686,28 +677,44 @@ Keep the conversation concise and to the point.
       </div>
 
       {/* Agent Details */}
-      <div className="space-y-3 text-sm text-gray-800 mb-6">
-        <p><strong>Name:</strong> {agentData.agentName}</p>
-        <p><strong>Gender:</strong> {agentData.agentGender || "N/A"}</p>
-        <p><strong>Language:</strong> {agentData.agentLanguage}</p>
-        <p><strong>Voice:</strong> {agentData.agentVoice}</p>
-      </div>
-          <div>
-            <strong>Avatar:</strong><br />
-            {agentData.avatar ? (
-              <img
-                src={agentData.avatar}
-                alt="Agent Avatar"
-                className="w-20 h-20 rounded-full mt-2"
-              />
-            ) : (
-              <p className="text-gray-500">No avatar available</p>
-            )}
-          </div>
+      <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 px-2">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          {agentData.avatar ? (
+            <img
+              src={agentData.avatar}
+              alt="Agent Avatar"
+              className="rounded-full border-4 border-[#6524EB] shadow-md"
+              style={{ width: "150px", height: "150px", objectFit: "cover" }}
+            />
+          ) : (
+            <div className="w-36 h-36 flex items-center justify-center bg-gray-100 rounded-full text-gray-500 text-sm">
+              No Avatar
+            </div>
+          )}
         </div>
-      
+
+        {/* Info */}
+        <div className="flex-1 text-gray-800 space-y-2 text-lg md:text-xl">
+          <p><strong className="text-[#6524EB]">Name:</strong> {agentData.agentName}</p>
+          <p><strong className="text-[#6524EB]">Gender:</strong> {agentData.agentGender || "N/A"}</p>
+          <p><strong className="text-[#6524EB]">Language:</strong> {agentData.agentLanguage}</p>
+          <p><strong className="text-[#6524EB]">Voice:</strong> {agentData.agentVoice}</p>
+          <p><strong className="text-[#6524EB]">Minutes Left:</strong> {agentData.mins_left/60}</p>
+          <p>
+            <strong className="text-[#6524EB]">Status:</strong>{" "}
+            {agentData.isDeactivated ? (
+              <span className="text-red-500 font-semibold">Deactivated</span>
+            ) : (
+              <span className="text-green-600 font-semibold">Active</span>
+            )}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
+
 
   
    

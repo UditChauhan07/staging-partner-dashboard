@@ -36,7 +36,7 @@ export function ReferralLink() {
           className="
             bg-white rounded-2xl shadow-xl
             p-8
-            max-w-xl         
+            max-w-3xl         
             w-full
           "
         >
