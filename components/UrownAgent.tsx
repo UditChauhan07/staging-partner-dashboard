@@ -174,7 +174,7 @@ setLoading(true);
         city:"Coral Springs",
          state: "Florida",
   country: "United States",
-  isWebsiteUrl:'www.rxpt.us',
+  webUrl:'www.rxpt.us',
   street_number: "11210 NW 45th St #",
 
       };
@@ -586,7 +586,7 @@ Keep the conversation concise and to the point.
 
    if (agentExists === null) {
     return (
-      <div className="text-center mt-10">
+      <div className="text-center mt-10" style={{display:"flex",justifyContent:'center',marginTop:'10px'}}>
         <FadeLoader color="#6524EB" />
       </div>
     );
