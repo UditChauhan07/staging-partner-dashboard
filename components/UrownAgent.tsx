@@ -11,6 +11,9 @@ import Swal from "sweetalert2";
 import { FadeLoader } from "react-spinners"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@radix-ui/react-dropdown-menu";
 import Modal from "./ui/modal";
+import CallTest from "./CallTest";
+import { RetellWebClient } from "retell-client-js-sdk";
+
 const avatars = {
   Male: [
     { img: "/images/Male-01.png" },
@@ -54,6 +57,98 @@ const [assignPhoneModal, setAssignPhoneModal] = useState(false);
 const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 const [showDeactivateModal, setShowDeactivateModal] = useState(false);
 const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+const [isCallActive, setIsCallActive] = useState(false);
+const [callLoading, setCallLoading] = useState(false);
+const [isCallInProgress, setIsCallInProgress] = useState(false);
+const [callId, setCallId] = useState("");
+const isEndingRef = useRef(false);
+  const [retellWebClient, setRetellWebClient] = useState(null);
+
+  console.log('showCallModal',showCallModal);
+
+    useEffect(() => {
+    const client = new RetellWebClient();
+    client.on("call_started", () => setIsCallActive(true));
+    client.on("call_ended", () => setIsCallActive(false));
+    client.on("update", (update) => {
+      //  Mark the update clearly as AGENT message
+      const customUpdate = {
+        ...update,
+        source: "agent", // Add explicit source
+      };
+
+      // Dispatch custom event for CallTest
+      window.dispatchEvent(
+        new CustomEvent("retellUpdate", { detail: customUpdate })
+      );
+    });
+
+    setRetellWebClient(client);
+  }, []);
+
+const onStartCall = async () => {
+  console.log('Start call');
+  setCallLoading(true);
+  try {
+    console.log('agentData',agentData)
+    const agentId = agentData?.agent_id;
+    if (!agentId) throw new Error("No agent ID found");
+
+    // Example: Initiate a call with Retell AI
+    const response = await axios.post(
+       `${process.env.NEXT_PUBLIC_API_URL}/api/agent/create-web-call`,
+      {
+        agent_id: agentId,
+        // Add other required parameters, e.g., phone number or call settings
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.NEXT_PUBLIC_RETELL_API}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+      setCallLoading(true);
+
+        if (response.status == 403) {
+        Swal.fire('Error',"Agent Plan minutes exhausted",'error');
+        setIsCallInProgress(false);
+        setTimeout(() => {
+          setPopupMessage("");
+        }, 5000);
+        return;
+      }
+
+    console.log("Call initiated:", response.data);
+    await retellWebClient.startCall({ accessToken: response?.data?.access_token });
+    setCallId(response?.data?.call_id);
+    setIsCallActive(true);
+  } catch (error) {
+    console.error("Error starting call:", error);
+    Swal.fire("Failed to start call. Please try again.");
+  } finally {
+    setCallLoading(false);
+  }
+};
+console.log('callId',callId)
+const onEndCall = async () => {
+  isEndingRef.current = false;
+  try {
+    // Example: End the call with Retell AI
+    // const callId = localStorage.getItem("currentCallId"); 
+    // const callId = localStorage.getItem("currentCallId"); 
+    // if (!callId) throw new Error("No call ID found");
+
+    const response = await retellWebClient.stopCall();
+
+    console.log("Call ended",response);
+    setIsCallActive(false);
+    isEndingRef.current = false;
+  } catch (error) {
+    console.error("Error ending call:", error);
+    Swal.fire("Failed to end call. Please try again.");
+  }
+};
   // const [loading, setLoading] = useState(false);
  const getLeadTypeChoices = () => {
         const fixedChoices = ["Spam Caller", "Irrelvant Call", "Angry Old Customer","Customer"];
@@ -587,6 +682,7 @@ Keep the conversation concise and to the point.
 
    if (agentExists === null) {
     return (
+
       <div className="text-center mt-10" style={{display:"flex",justifyContent:'center',marginTop:'10px'}}>
         <FadeLoader color="#6524EB" />
       </div>
@@ -622,6 +718,7 @@ Keep the conversation concise and to the point.
                     onClick={() => {
                       setShowCallModal(true);
                       setShowDropdown(false);
+                      
                     }}
                   >
                     📞 Test Call
@@ -649,7 +746,7 @@ Keep the conversation concise and to the point.
                     📱 Assign Phone Number
                   </button>
                 </li>
-                <li>
+                {/* <li>
                   <button
                     className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
@@ -659,13 +756,37 @@ Keep the conversation concise and to the point.
                   >
                     ❌ Cancel Subscription
                   </button>
-                </li>
+                </li> */}
                 <li>
                   <button
-                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
-                    onClick={() => {
-                      setShowDeactivateModal(true);
-                      setShowDropdown(false);
+                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                      onClick={async () => {
+                      setShowDropdown(false); // Hide dropdown first
+
+                      const result = await Swal.fire({
+                        title: "Are you sure?",
+                        text: "You want to deactivate this agent?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        confirmButtonColor: "#3085d6",
+                        cancelButtonColor: "#d33",
+                        confirmButtonText: "Yes, deactivate it!",
+                      });
+
+                      if (result.isConfirmed) {
+                        try {
+                          const response = await axios.post(
+                            `${process.env.NEXT_PUBLIC_API_URL}/api/agent/deactivateAgentbyAgentId/${agentData?.agent_id}`
+                          );
+
+                          Swal.fire("Deactivated!", "Agent has been deactivated.", "success");
+                          setShowDeactivateModal(false); // close modal if needed
+                        } catch (error) {
+                          console.error(error);
+                          Swal.fire("Error", "Failed to deactivate agent.", "error");
+                        }
+                      }
+
                     }}
                   >
                     🚫 Deactivate Agent
@@ -674,11 +795,33 @@ Keep the conversation concise and to the point.
               </ul>
             </div>
           )}
+          {showCallModal && (
+  <Modal
+    isOpen={showCallModal}
+    onClose={() => setShowCallModal(false)}
+    title="Test Call"
+    width="max-w-lg"
+  >
+    <CallTest
+      isCallActive={isCallActive}
+      onStartCall={onStartCall}
+      onEndCall={onEndCall}
+      callLoading={callLoading}
+      setCallLoading={setCallLoading}
+      isliveTranscript={false}
+      agentName={agentData?.agentName || "Your Agent"}
+      agentAvatar={agentData?.avatar || "/images/rex.png"}
+      businessName="Receptin"
+      isEndingRef={isEndingRef}
+    />
+  </Modal>
+)}
         </div>
       </div>
 
       {/* Agent Details */}
-      <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 px-2">
+     <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 px-2">
+
         {/* Avatar */}
         <div className="flex-shrink-0">
           {agentData.avatar ? (
@@ -710,6 +853,9 @@ Keep the conversation concise and to the point.
               <span className="text-green-600 font-semibold">Active</span>
             )}
           </p>
+        </div>
+      </div>
+
         </div>
       </div>
     </div>
@@ -894,6 +1040,7 @@ Keep the conversation concise and to the point.
       <p style={{ marginLeft: "30px" }}>
         <strong>Note:</strong> Please Don't make if you have already created. It will override last one.
       </p>
+
     </div>
   );
 }
