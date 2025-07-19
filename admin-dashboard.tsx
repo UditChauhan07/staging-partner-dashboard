@@ -162,6 +162,8 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import axios from "axios";
 import { ProfileView } from "./components/PofileView";
 import AgentFormSetup from "./components/UrownAgent";
+import { AnalyticsSection } from "./components/analytics-section";
+import EarningsTable from "./components/EarningsTable";
 interface User {
   id: string;
   name: string;
@@ -294,13 +296,16 @@ const handleProfileUpdate = async (formData: FormData) => {
     
   
     switch (activeSection) {
+      case "analytics":
+        return <AnalyticsSection/>;
       case "users":
         return <UserManagement onViewUser={handleViewUser} />;
       case "agents":
         return <AgentBusinessList onViewAgent={handleViewAgent} />;
       case "referral":
         return <ReferralLink />;
- 
+ case "EarningsTable" :
+  return <EarningsTable/>;
         case "ProfileDetails":
           return <ProfileView/>;
         case "Ownagent":
@@ -319,12 +324,7 @@ const handleProfileUpdate = async (formData: FormData) => {
         onToggleCollapse={() => setIsCollapsed((v) => !v)}
         onLogout={onLogout}
       />
-{/* <div className="absolute top-4 right-4 z-50">
-  <Avatar onClick={() => setShowProfile(true)} className="cursor-pointer">
-    <AvatarImage src={adminUser.profileImage} />
-    <AvatarFallback>{adminUser.name[0]}</AvatarFallback>
-  </Avatar>
-</div> */}
+
       <main
         className={`transition-all duration-300 ${
           isCollapsed ? "ml-16" : "ml-64"
@@ -332,7 +332,7 @@ const handleProfileUpdate = async (formData: FormData) => {
       >
         {!selectedAgent && (
           <div className="p-6">
-            <div className="max-w-7xl mx-auto">{renderContent()}</div>
+            <div className="max-w-8xl mx-auto">{renderContent()}</div>
           </div>
         )}
         {selectedAgent && renderContent()}
