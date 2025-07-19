@@ -133,6 +133,7 @@ const onStartCall = async () => {
 console.log('callId',callId)
 const onEndCall = async () => {
   isEndingRef.current = false;
+   setRefresh((prev)=>!prev);
   try {
     // Example: End the call with Retell AI
     // const callId = localStorage.getItem("currentCallId"); 
@@ -724,7 +725,7 @@ Keep the conversation concise and to the point.
                     📞 Test Call
                   </button>
                 </li>
-                <li>
+                {/* <li>
                   <button
                     className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
@@ -745,7 +746,7 @@ Keep the conversation concise and to the point.
                   >
                     📱 Assign Phone Number
                   </button>
-                </li>
+                </li> */}
                 {/* <li>
                   <button
                     className="w-full px-5 py-2 hover:bg-gray-100 text-left"
@@ -844,7 +845,7 @@ Keep the conversation concise and to the point.
           <p><strong className="text-[#6524EB]">Gender:</strong> {agentData.agentGender || "N/A"}</p>
           <p><strong className="text-[#6524EB]">Language:</strong> {agentData.agentLanguage}</p>
           <p><strong className="text-[#6524EB]">Voice:</strong> {agentData.agentVoice}</p>
-          <p><strong className="text-[#6524EB]">Minutes Left:</strong> {agentData.mins_left/60}</p>
+          <p><strong className="text-[#6524EB]">Minutes Left:</strong> {Math.floor(agentData.mins_left / 60)}</p>
           <p>
             <strong className="text-[#6524EB]">Status:</strong>{" "}
             {agentData.isDeactivated ? (
