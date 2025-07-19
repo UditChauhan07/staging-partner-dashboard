@@ -689,9 +689,9 @@ Keep the conversation concise and to the point.
     );
   }
 
+  // Agent Already Exists View
  if (agentExists && agentData) {
   return (
-    
     <div className="max-w-4xl mx-auto mt-10 bg-white shadow-2xl rounded-2xl p-6 border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
@@ -857,8 +857,8 @@ Keep the conversation concise and to the point.
       </div>
 
         </div>
+      
  
-    
   );
 }
 

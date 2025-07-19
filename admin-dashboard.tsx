@@ -324,12 +324,7 @@ const handleProfileUpdate = async (formData: FormData) => {
         onToggleCollapse={() => setIsCollapsed((v) => !v)}
         onLogout={onLogout}
       />
-{/* <div className="absolute top-4 right-4 z-50">
-  <Avatar onClick={() => setShowProfile(true)} className="cursor-pointer">
-    <AvatarImage src={adminUser.profileImage} />
-    <AvatarFallback>{adminUser.name[0]}</AvatarFallback>
-  </Avatar>
-</div> */}
+
       <main
         className={`transition-all duration-300 ${
           isCollapsed ? "ml-16" : "ml-64"
