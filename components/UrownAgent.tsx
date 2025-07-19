@@ -44,6 +44,7 @@ export default function AgentFormSetup() {
   const audioRefs = useRef<HTMLAudioElement[]>([]);
   const [agentExists, setAgentExists] = useState<null | boolean>(null);
   const [agentData, setAgentData] = useState<any>(null);
+  const[refresh,setRefresh]=useState(false)
    
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -114,11 +115,11 @@ useEffect(() => {
   };
 
   fetchAgentStatus();
-}, []);
+}, [refresh]);
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [refresh]);
 
   const fetchInitialData = async () => {
     try {
@@ -154,8 +155,8 @@ useEffect(() => {
   const handleSubmit = async () => {
     const userId = localStorage.getItem("userId");
 
-    if (!form.name ||!form.language || !form.gender || !form.voice || !form.avatar) {
-     Swal.fire("Please fill all required fields: Name, Language, Gender, Voice, Avatar.");
+    if (!form.agentName ||!form.language || !form.gender || !form.voice || !form.avatar) {
+     Swal.fire("Please fill all required fields: agentname, Language, Gender, Voice, Avatar.");
 
       return;
     }
@@ -231,7 +232,21 @@ Google: N/A`,
       );
 
       const knowledge_Base_ID = kbRes?.data?.knowledge_base_id;
+      knowledgeFormData.append("knowledgeBaseId",knowledge_Base_ID)
+      // knowledgeFormData.append("knowledgeBaseName",knowledgeBaseName)
     localStorage.setItem("knowledge_Base_ID",knowledge_Base_ID)
+      localStorage.getItem("BusinessId");
+     await axios.patch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/businessDetails/updateKnowledeBase/${businessId}`,
+          knowledgeFormData,
+          {
+            headers: {
+              Authorization: `Bearer ${process.env.REACT_APP_API_RETELL_API}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+
 
       const partnername = localStorage.getItem("partnername") || "Receptin";
       const partnerFirstName = partnername.split(" ")[0];
@@ -512,7 +527,7 @@ Keep the conversation concise and to the point.
                     ],
                     end_call_after_silence_ms: 30000,
                     normalize_for_speech: true,
-                    webhook_url: `${process.env.NEXT_PUBLIC_API__URL}/api/agent/updateAgentCall_And_Mins_WebHook`,
+                    webhook_url: `${process.env.NEXT_PUBLIC_API_URL}/api/agent/updateAgentCall_And_Mins_WebHook`,
                 
         },
         {
@@ -530,10 +545,10 @@ Keep the conversation concise and to the point.
         llmId,
         avatar: form.avatar,
         agentVoice: form.voice,
-        knowledgebaseId: knowledge_Base_ID,
+        knowledgeBaseId: knowledge_Base_ID,
         agentAccent: form.selectedVoice?.voice_accent || "American",
-        agentRole: form.role,
-        agentName: form.name || "Virtual Assistant",
+        agentRole: "Partner Assistant",
+        agentName: form.agentName || "Virtual Assistant",
         agentLanguageCode: form.language,
         agentLanguage: form.language,
         dynamicPromptTemplate: filledPrompt,
@@ -549,7 +564,8 @@ Keep the conversation concise and to the point.
       const saveRes = await createAgent(dbPayload);
       if (saveRes.status === 200 || saveRes.status === 201) {
         setLoading(false)
-        alert("Agent created successfully!");
+        setRefresh((prev)=>!prev);
+        Swal.fire("Agent created successfully!");
         localStorage.removeItem("agentCode");
         localStorage.removeItem("businessType");
         
