@@ -269,7 +269,7 @@ setLoading(true);
         city:"Coral Springs",
          state: "Florida",
   country: "United States",
-  isWebsiteUrl:'www.rxpt.us',
+  webUrl:'www.rxpt.us',
   street_number: "11210 NW 45th St #",
 
       };
@@ -331,6 +331,7 @@ Google: N/A`,
       // knowledgeFormData.append("knowledgeBaseName",knowledgeBaseName)
     localStorage.setItem("knowledge_Base_ID",knowledge_Base_ID)
       localStorage.getItem("BusinessId");
+      knowledgeFormData.append("agentId",null)
      await axios.patch(
           `${process.env.NEXT_PUBLIC_API_URL}/api/businessDetails/updateKnowledeBase/${businessId}`,
           knowledgeFormData,
@@ -650,10 +651,11 @@ Keep the conversation concise and to the point.
         rawPromptTemplate: filledPrompt,
         promptVariablesList: JSON.stringify(promptVariablesList),
         agentGender: form.gender,
-        agentPlan: "Partner",
+        agentPlan: "free",
         agentStatus: true,
         businessId,
         additionalNote: "",
+        agentCreatedBy:"partner"
       };
 
       const saveRes = await createAgent(dbPayload);
@@ -680,7 +682,8 @@ Keep the conversation concise and to the point.
 
    if (agentExists === null) {
     return (
-      <div className="text-center mt-10" style={{display:'flex',justifyContent:"center"}}>
+
+      <div className="text-center mt-10" style={{display:"flex",justifyContent:'center',marginTop:'10px'}}>
         <FadeLoader color="#6524EB" />
       </div>
     );
@@ -689,12 +692,13 @@ Keep the conversation concise and to the point.
   // Agent Already Exists View
  if (agentExists && agentData) {
   return (
-    <div className="max-w-2xl mx-auto mt-10 bg-white shadow-xl rounded-2xl p-6 border border-gray-200">
+    <div className="max-w-4xl mx-auto mt-10 bg-white shadow-2xl rounded-2xl p-6 border border-gray-200">
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl font-semibold text-gray-800">
+        <h2 className="text-3xl font-bold text-[#6524EB]">
           Your Partner Agent
         </h2>
+
         {/* More Options Dropdown */}
         <div className="relative">
           <Button
@@ -706,11 +710,11 @@ Keep the conversation concise and to the point.
           </Button>
 
           {showDropdown && (
-            <div className="absolute right-0 mt-2 w-56 bg-white shadow-lg rounded-md border z-50">
-              <ul className="py-1 text-sm text-gray-700">
+            <div className="absolute right-0 mt-2 w-60 bg-white shadow-lg rounded-xl border z-50">
+              <ul className="py-2 text-sm text-gray-800">
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowCallModal(true);
                       setShowDropdown(false);
@@ -722,7 +726,7 @@ Keep the conversation concise and to the point.
                 </li>
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowEditModal(true);
                       setShowDropdown(false);
@@ -733,7 +737,7 @@ Keep the conversation concise and to the point.
                 </li>
                 <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setAssignPhoneModal(true);
                       setShowDropdown(false);
@@ -744,7 +748,7 @@ Keep the conversation concise and to the point.
                 </li>
                 {/* <li>
                   <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left"
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
                       setShowCancelConfirm(true);
                       setShowDropdown(false);
@@ -782,22 +786,12 @@ Keep the conversation concise and to the point.
                           Swal.fire("Error", "Failed to deactivate agent.", "error");
                         }
                       }
+
                     }}
                   >
                     🚫 Deactivate Agent
                   </button>
                 </li>
-                {/* <li>
-                  <button
-                    className="w-full px-4 py-2 hover:bg-gray-100 text-left text-red-600"
-                    onClick={() => {
-                      setShowDeleteConfirm(true);
-                      setShowDropdown(false);
-                    }}
-                  >
-                    🗑️ Delete Agent
-                  </button>
-                </li> */}
               </ul>
             </div>
           )}
@@ -827,6 +821,7 @@ Keep the conversation concise and to the point.
 
       {/* Agent Details */}
      <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10 px-2">
+
         {/* Avatar */}
         <div className="flex-shrink-0">
           {agentData.avatar ? (
@@ -860,10 +855,13 @@ Keep the conversation concise and to the point.
           </p>
         </div>
       </div>
+
         </div>
-      
+      </div>
+    </div>
   );
 }
+
 
   
    
