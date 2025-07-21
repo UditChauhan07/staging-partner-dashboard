@@ -930,7 +930,6 @@ The user transcript might contain transcription errors. Use your best judgment t
             customer_name: "John Doe",
             timeZone: timeZone,
           },
-          knowledge_base_ids: [knowledgeBaseId],
         };
 
         // Update LLM configuration
