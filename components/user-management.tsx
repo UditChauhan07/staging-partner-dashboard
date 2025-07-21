@@ -43,6 +43,8 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "newest" | "oldest">("newest");
+
   const usersPerPage = 20
   async function fetchUsers() {
     try {
@@ -80,20 +82,36 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   // Filter and paginat
   const currentReferredBy = typeof window !== "undefined" ? localStorage.getItem("referralCode") : null;
 
-  const filteredUsers = users
-    .filter(
-      (user) =>
-        user.referredBy === currentReferredBy && user.isUserType === 0
-    )
-    .filter(
-      (user) =>
-        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.id.toLowerCase().includes(searchTerm.toLowerCase()),
-    );
-  const totalPages = Math.ceil(filteredUsers.length / usersPerPage)
-  const startIndex = (currentPage - 1) * usersPerPage
-  const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage)
+const filteredUsers = users
+  .filter(
+    (user) =>
+      user.referredBy === currentReferredBy && user.isUserType === 0
+  )
+  .filter(
+    (user) =>
+      user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.id?.toLowerCase().includes(searchTerm.toLowerCase()),
+  );
+
+// Sort users
+const sortedUsers = [...filteredUsers].sort((a, b) => {
+  if (sortBy === "name-asc") {
+    return (a.name || "").localeCompare(b.name || "");
+  } else if (sortBy === "name-desc") {
+    return (b.name || "").localeCompare(a.name || "");
+  } else if (sortBy === "newest") {
+    return new Date(b.registrationDate).getTime() - new Date(a.registrationDate).getTime();
+  } else if (sortBy === "oldest") {
+    return new Date(a.registrationDate).getTime() - new Date(b.registrationDate).getTime();
+  }
+  return 0;
+});
+
+const totalPages = Math.ceil(sortedUsers.length / usersPerPage);
+const startIndex = (currentPage - 1) * usersPerPage;
+const paginatedUsers = sortedUsers.slice(startIndex, startIndex + usersPerPage);
+
 
   // Handlers unchanged
   const handleAddUser = () => {
@@ -299,7 +317,20 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>All Users</CardTitle>
-                <div className="relative w-64">
+               
+                <div className="flex gap-2 items-center">
+  <label className="text-sm text-gray-600">Sort by:</label>
+  <select
+    value={sortBy}
+    onChange={(e) => setSortBy(e.target.value as any)}
+    className="border rounded px-2 py-1 text-sm"
+  >
+    <option value="newest">Newest First</option>
+    <option value="oldest">Oldest First</option>
+    <option value="name-asc">Name A-Z</option>
+    <option value="name-desc">Name Z-A</option>
+  </select>
+</div><div className="relative w-64">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                   <Input
                     placeholder="Search users..."
@@ -308,7 +339,8 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                     className="pl-10"
                   />
                 </div>
-              </div>
+
+              </div> 
             </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">

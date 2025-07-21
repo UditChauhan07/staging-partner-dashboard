@@ -204,9 +204,9 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   // initialize from localStorage, fallback to "users"
   const [activeSection, setActiveSection] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      return localStorage.getItem(STORAGE_KEY) || "users";
+      return localStorage.getItem(STORAGE_KEY) || "analytics";
     }
-    return "users";
+    return "analytics";
   });
 
   // write back whenever it changes
@@ -219,7 +219,7 @@ export default function AdminDashboard({ onLogout }: AdminDashboardProps) {
   const [showProfile, setShowProfile] = useState(false);
 const [adminUser, setAdminUser] = useState({
   name: "Admin",
-  email: "admin@example.com",
+  email: "partner@example.com",
   address: "123 Main St",
   profileImage: "",
 });
