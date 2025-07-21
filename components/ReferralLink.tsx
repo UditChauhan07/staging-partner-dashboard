@@ -34,7 +34,7 @@ export function ReferralLink() {
         {/* Wider card */}
         <div
           className="
-            bg-white rounded-2xl shadow-xl
+            bg-white rounded-2xl 
             p-8
             max-w-3xl         
             w-full
