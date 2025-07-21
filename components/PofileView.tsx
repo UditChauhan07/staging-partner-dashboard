@@ -6,12 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import { Loader2, Camera } from "lucide-react";
-import axios from "axios";
-import { Autocomplete, useLoadScript } from "@react-google-maps/api";
+import { Loader2, Camera, Eye, EyeOff } from "lucide-react";
 import Swal from "sweetalert2";
 import { FadeLoader } from "react-spinners";
-import { Eye, EyeOff,  } from "lucide-react";
+import axios from "axios";
 
 export function ProfileView({ onBack }: { onBack: () => void }) {
   const [name, setName] = useState("");
@@ -24,31 +22,67 @@ export function ProfileView({ onBack }: { onBack: () => void }) {
   const [city, setCity] = useState("");
   const [state, setState] = useState("");
   const [country, setCountry] = useState("");
-  const [zip, setZip] = useState("");
+  const [pinCode, setpinCode] = useState("");
 
   const [profileImage, setProfileImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string>("/images/defaultiprofile.svg");
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
   const [showOld, setShowOld] = useState(false);
-const [showNew, setShowNew] = useState(false);
-const [showConfirm, setShowConfirm] = useState(false);
-const [changingPassword, setChangingPassword] = useState(false);
-const [showPasswordModal, setShowPasswordModal] = useState(false);
-const [oldPassword, setOldPassword] = useState("");
-const [newPassword, setNewPassword] = useState("");
-const [confirmPassword, setConfirmPassword] = useState("");
+  const [showNew, setShowNew] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
-
-
-
-  const autocompleteRef = useRef<any>(null);
+  const autocompleteInputRef = useRef<HTMLInputElement>(null);
   const userId = typeof window !== "undefined" ? localStorage.getItem("userId") : null;
+useEffect(() => {
+  const interval = setInterval(() => {
+    if (window.google?.maps?.places && autocompleteInputRef.current) {
+      initAutocomplete();
+      clearInterval(interval);
+    }
+  }, 300);
 
-  const { isLoaded } = useLoadScript({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
-    libraries: ["places"],
+  return () => clearInterval(interval);
+}, []);
+  // Load Google Maps script manually
+  // useEffect(() => {
+  //   if (typeof window === "undefined" || (window as any).google) return;
+
+  //   const script = document.createElement("script");
+  //   script.src = `https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`;
+  //   script.async = true;
+  //   script.defer = true;
+  //   script.onload = initAutocomplete;
+  //   document.head.appendChild(script);
+
+  //   return () => {
+  //     document.head.removeChild(script);
+  //   };
+  // }, []);
+
+ const initAutocomplete = () => {
+  if (!autocompleteInputRef.current || !window.google?.maps) return;
+
+  const autocomplete = new google.maps.places.Autocomplete(autocompleteInputRef.current);
+  autocomplete.addListener("place_changed", () => {
+    const place = autocomplete.getPlace();
+    const comps = place?.address_components || [];
+
+    const get = (type: string) =>
+      comps.find((c) => c.types.includes(type))?.long_name || "";
+
+    setGoogleBusiness(place?.formatted_address || "");
+    setCity(get("locality") || get("administrative_area_level_2"));
+    setState(get("administrative_area_level_1"));
+    setCountry(get("country"));
+    setpinCode(get("postal_code"));
   });
+};
 
   // Load Profile
   useEffect(() => {
@@ -61,23 +95,20 @@ const [confirmPassword, setConfirmPassword] = useState("");
         setEmail(data.email);
         setPhone(data.phone);
 
-        // Fix path and construct URL for profile image
         if (data.profilePicture) {
           const rawPath = data.profilePicture;
           const cleanPath = rawPath.replace(/^(\.\.\/)+public/, "");
           const fullUrl = `${process.env.NEXT_PUBLIC_API_URL}${cleanPath}`;
           setPreviewUrl(fullUrl);
-        } else {
-          setPreviewUrl("/images/defaultiprofile.svg");
         }
 
         const addr = data.address || {};
         setGoogleBusiness(data.address || "");
-        setAddressLine(addr.line || "");
-        setCity(addr.city || "");
-        setState(addr.state || "");
-        setCountry(addr.country || "");
-        setZip(addr.zip || "");
+        setAddressLine(data.addressLine || "");
+        setCity(data.city || "");
+        setState(data.state || "");
+        setCountry(data.country || "");
+        setpinCode(data.pinCode || "");
       } catch (err) {
         console.error("Failed to load profile", err);
       } finally {
@@ -88,7 +119,7 @@ const [confirmPassword, setConfirmPassword] = useState("");
     if (userId) fetchProfile();
   }, [userId]);
 
-  // Show local preview when a new file is selected
+  // Show local preview
   useEffect(() => {
     if (profileImage) {
       const objectUrl = URL.createObjectURL(profileImage);
@@ -97,36 +128,24 @@ const [confirmPassword, setConfirmPassword] = useState("");
     }
   }, [profileImage]);
 
-  const onPlaceChanged = () => {
-    const place = autocompleteRef.current?.getPlace();
-    const comps = place?.address_components || [];
-
-    const get = (type: string) =>
-      comps.find((c) => c.types.includes(type))?.long_name || "";
-
-    setGoogleBusiness(place?.formatted_address || "");
-    setCity(get("locality") || get("administrative_area_level_2"));
-    setState(get("administrative_area_level_1"));
-    setCountry(get("country"));
-    setZip(get("postal_code"));
-  };
-
   const handleSubmit = async () => {
     try {
       setUpdating(true);
 
-      const fullAddress = `${addressLine},${googleBusiness},${city}, ${state},${country} - ${zip}`;
+      const fullAddress = `${addressLine},${googleBusiness},${city}, ${state},${country} - ${pinCode}`;
 
-      // 1. Update profile data
-      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/endusers/users/${userId}`, {
+      await axios.put(`${process.env.NEXT_PUBLIC_API_URL}/api/endusers/updatePartnerProfile/${userId}`, {
         name,
         email,
         phone,
-        
+        addressLine,
         address: fullAddress,
+        city,
+        state,
+        country,
+        pinCode,
       });
 
-      // 2. Upload profile image
       if (profileImage) {
         const formData = new FormData();
         formData.append("profilePicture", profileImage);
@@ -143,50 +162,32 @@ const [confirmPassword, setConfirmPassword] = useState("");
       Swal.fire("Profile updated successfully.");
     } catch (err) {
       console.error("Error updating profile", err);
-      alert("Failed to update profile.");
+      Swal.fire("Error", "Failed to update profile.", "error");
     } finally {
       setUpdating(false);
     }
   };
 
   if (loading) {
-    console.log("reachedHere");
     return (
-      <div
-        style={{
-          position: "fixed", // ✅ overlay entire screen
-          top: 0,
-          left: 0,
-          height: "100vh",
-          width: "100vw",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "rgba(255, 255, 255, 0.5)", // ✅ 50% white transparent
-          zIndex: 9999, // ✅ ensure it's on top
-        }}
-      >
+      <div className="fixed inset-0 flex justify-center items-center bg-white bg-opacity-50 z-50">
         <FadeLoader size={90} color="#6524EB" speedMultiplier={2} />
       </div>
     );
   }
 
   return (
-    
-    <div className="max-w-4xl mx-auto my-1 p-1 bg-white rounded-lg shadow-xl">
-
+    <div className="max-w-4xl mx-auto my-1 p-1 bg-white rounded-lg ">
       <Card className="border-none shadow-none">
         <CardContent className="space-y-6 pt-4">
-          {/* <h2 className="text-3xl font-bold border-b pb-4 mb-4">Your Profile</h2> */}
           <div className="flex justify-between items-center border-b pb-4 mb-4">
-  <h2 className="text-3xl font-bold">Your Profile</h2>
-  <Button variant="outline"  style={{backgroundColor:'black',color:'white'}} onClick={() => setShowPasswordModal(true)}>
-    Change Password
-  </Button>
-</div>
+            <h2 className="text-3xl font-bold">Your Profile</h2>
+            <Button variant="outline" style={{ backgroundColor: 'black', color: 'white' }} onClick={() => setShowPasswordModal(true)}>
+              Change Password
+            </Button>
+          </div>
 
           <div className="flex flex-col sm:flex-row items-center gap-6">
-            {/* Profile Image */}
             <div className="relative group w-32 h-32 shrink-0 rounded-full border-blue-500 shadow-md overflow-hidden">
               <Image
                 src={previewUrl}
@@ -210,7 +211,6 @@ const [confirmPassword, setConfirmPassword] = useState("");
               </label>
             </div>
 
-            {/* Name Input */}
             <div className="w-full">
               <Label htmlFor="name" className="block text-lg text-gray-700 mb-1">
                 Name
@@ -219,7 +219,6 @@ const [confirmPassword, setConfirmPassword] = useState("");
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="p-3 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                 disabled
               />
             </div>
@@ -237,52 +236,26 @@ const [confirmPassword, setConfirmPassword] = useState("");
           </div>
 
           <div>
-            <Label> Near by place</Label>
-            <Autocomplete onLoad={(ref) => (autocompleteRef.current = ref)} onPlaceChanged={onPlaceChanged}>
-              <Input
-                id="google-autocomplete"
-                placeholder="Search address or business"
-                value={googleBusiness}
-                onChange={(e) => setGoogleBusiness(e.target.value)}
-              />
-            </Autocomplete>
+            <Label>Near by place</Label>
+            <Input
+              ref={autocompleteInputRef}
+              placeholder="Search address or business"
+              value={googleBusiness}
+              onChange={(e) => setGoogleBusiness(e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <div>
-              <Label>Address Line</Label>
-              <Input placeholder="House no.." value={addressLine} onChange={(e) => setAddressLine(e.target.value)} />
-            </div>
-            <div>
-              <Label>City</Label>
-              <Input value={city} onChange={(e) => setCity(e.target.value)} />
-            </div>
-            <div>
-              <Label>State</Label>
-              <Input value={state} onChange={(e) => setState(e.target.value)} />
-            </div>
-            <div>
-              <Label>Country</Label>
-              <Input value={country} onChange={(e) => setCountry(e.target.value)} />
-            </div>
-            <div>
-              <Label>Pincode</Label>
-              <Input value={zip} onChange={(e) => setZip(e.target.value)} />
-            </div>
+            <div><Label>Address Line</Label><Input value={addressLine} onChange={(e) => setAddressLine(e.target.value)} /></div>
+            <div><Label>City</Label><Input value={city} onChange={(e) => setCity(e.target.value)} /></div>
+            <div><Label>State</Label><Input value={state} onChange={(e) => setState(e.target.value)} /></div>
+            <div><Label>Country</Label><Input value={country} onChange={(e) => setCountry(e.target.value)} /></div>
+            <div><Label>Pincode</Label><Input value={pinCode} onChange={(e) => setpinCode(e.target.value)} /></div>
           </div>
-
-         
 
           <div className="pt-6 flex justify-end">
             <Button onClick={handleSubmit} disabled={updating}>
-              {updating ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Update Profile"
-              )}
+              {updating ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Updating...</> : "Update Profile"}
             </Button>
           </div>
           {showPasswordModal && (
