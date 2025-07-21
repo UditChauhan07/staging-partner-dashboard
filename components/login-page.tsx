@@ -71,7 +71,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     placeholder="partner@rexpt.com"
                     className="pl-10 h-12"
                     required
-                  />
+                  />       
                 </div>
               </div>
               {/* Password */}
