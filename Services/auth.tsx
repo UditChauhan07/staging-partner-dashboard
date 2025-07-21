@@ -19,7 +19,7 @@ export const adminLogin = async (email, password) => {
 // Get user analytics
 export const getAnalytics = async () => {
     try {
-        const token = localStorage.getItem("token");
+        
         const res = await axios.get(`${URL}/api/analytics/useranalytics`, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -160,6 +160,21 @@ export const countAgentsbyUserId = async (userId) => {
     } catch (error) {
         console.error("Error fetching agent count:", error);
         return 0;
+    }
+};
+
+export const updateAgent = async (agentId, updateData) => {
+    const token = localStorage.getItem("token");
+
+    try {
+        const res = await axios.put(`/agent/updateAgent/${agentId}`, updateData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+              return res.data;
+    } catch (error) {
+        console.error("Error while adding assign number at db", error);
     }
 };
 // export const deleteAgent = async (agentId) => {

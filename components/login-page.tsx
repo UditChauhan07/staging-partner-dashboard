@@ -68,7 +68,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@rexpt.com"
+                    placeholder="partner@rexpt.com"
                     className="pl-10 h-12"
                     required
                   />
