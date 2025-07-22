@@ -197,7 +197,7 @@ export default function EarningsTable() {
           <select
             value={sortField}
             onChange={(e) => setSortField(e.target.value)}
-            className="block border rounded px-2 py-1 text-sm"
+            className="block border rounded  py-1 text-sm"
           >
             <option value="">None</option>
             <option value="name">User Name</option>
@@ -217,7 +217,7 @@ export default function EarningsTable() {
             {sortOrder === "asc" ? "↑ Ascending" : "↓ Descending"}
           </button>
         )} */}
-        <div style={{position:'absolute',right:'26px'}}>
+        <div style={{position:'absolute',right:'30px'}}>
   {/* <label className="text-sm text-gray-600">Search</label> */}
   <input
     type="text"
