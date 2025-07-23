@@ -516,11 +516,11 @@ export function AgentDetailView({
                 {retellVoices.find((v) => v.voice_id === selectedVoiceId)
                   ?.voice_name || "Select Voice"}
               </span>
-              {dropdowns?.agent ? (
+              {/* {dropdowns?.agent ? (
                 <ChevronUp size={16} />
               ) : (
                 <ChevronDown size={16} />
-              )}
+              )} */}
             </button>
             {dropdowns?.agent && (
               <div className="absolute mt-1 w-64 bg-white border rounded shadow z-10 max-h-60 overflow-y-auto">
@@ -543,7 +543,7 @@ export function AgentDetailView({
                         toggleDropdown("agent");
 
                         await axios.put(
-                          `${process.env.NEXT_PUBLIC_API_URL}/api/agent/agent/update/${agent.agent_id}`,
+                          `${process.env.NEXT_PUBLIC_API_URL}/api/agent/update/${agent.agent_id}`,
                           {
                             voice_id: voice.voice_id,
                           }

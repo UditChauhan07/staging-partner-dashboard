@@ -71,6 +71,12 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
 
   const [loading, setLoading] = useState(false);
   const [loaders, setLoaders] = useState(false);
+  
+const [statusFilter, setStatusFilter] = useState("All");
+const [planFilter, setPlanFilter] = useState("All");
+const [sortField, setSortField] = useState("");
+const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
+
   console.log(selectedAgent, "selectedAgent");
 
   async function fetchUsers() {
@@ -148,19 +154,39 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
   }, []);
 
   const agentsPerPage = 10;
-  const filteredAgents = agentData.filter((row) => {
+ const filteredAgents = agentData
+  .filter((row) => {
     const name = row.agentName || "";
     const business = row?.businessName || "";
     const user = row.userName || "";
     const email = row.userEmail || "";
 
-    return (
+    const matchesSearch =
       name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       business.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+      email.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesStatus =
+      statusFilter === "All" ||
+      (statusFilter === "Active" && row.status === 1) ||
+      (statusFilter === "Inactive" && row.status !== 1);
+
+    const matchesPlan = planFilter === "All" || row.agentPlan === planFilter;
+
+    return matchesSearch && matchesStatus && matchesPlan;
+  })
+  .sort((a, b) => {
+    if (!sortField) return 0;
+
+    const valA = (a as any)[sortField] || "";
+    const valB = (b as any)[sortField] || "";
+
+    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+    return 0;
   });
+
 
   const totalPages = Math.ceil(filteredAgents.length / agentsPerPage);
   const startIndex = (currentPage - 1) * agentsPerPage;
@@ -168,7 +194,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
     startIndex,
     startIndex + agentsPerPage
   );
-
+  console.log(paginatedAgents)
   const handleDeleteClick = (agent: AgentBusinessRow) => {
     setSelectedAgent(agent);
     setShowConfirm(true);
@@ -342,15 +368,75 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
           <div className="flex justify-between items-center">
             <CardTitle>All Agents</CardTitle>
 
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          
+            <div className="flex gap-4 mt-4">
+  <div>
+    <label className="text-sm text-gray-600">Status &nbsp;</label>
+    <select
+      value={statusFilter}
+      onChange={(e) => setStatusFilter(e.target.value)}
+      className="mt-1 border rounded px-2 py-1 text-sm"
+    >
+      <option value="All">All</option>
+      <option value="Active">Active</option>
+      <option value="Inactive">Inactive</option>
+    </select>
+  </div>
+
+  <div>
+    <label className="text-sm text-gray-600">Plan &nbsp;</label>
+    <select
+      value={planFilter}
+      onChange={(e) => setPlanFilter(e.target.value)}
+      className="mt-1 border rounded px-2 py-1 text-sm"
+    >
+      <option value="All">All</option>
+      {[...new Set(agentData.map((a) => a.agentPlan))].map((plan) => (
+        <option key={plan} value={plan}>
+          {plan}
+        </option>
+      ))}
+    </select>
+  </div>
+
+  <div>
+    <label className="text-sm text-gray-600">Sort By &nbsp;</label>
+    <select
+      value={sortField}
+      onChange={(e) => setSortField(e.target.value)}
+      className="mt-1 border rounded px-2 py-1 text-sm"
+    >
+      <option value="">None</option>
+      <option value="agentName">Agent Name</option>
+      <option value="userName">User Name</option>
+      <option value="agentPlan">Plan</option>
+    </select>
+  </div>
+
+  {sortField && (
+    <div className="flex items-end">
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={() =>
+          setSortOrder((prev) => (prev === "asc" ? "dsc" : "asc"))
+        }
+      >
+        {sortOrder === "asc" ? "↑ ASC" : "↓ DSC"}
+      </Button>
+    </div>
+  )}
+    <div className="relative w-30">
+              {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400  w-4" /> */}
               <Input
                 placeholder="Search agents or businesses..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="block border rounded px-2 py-1 text-sm h-8" 
               />
             </div>
+</div>
+
           </div>
         </CardHeader>
         <CardContent>
@@ -358,6 +444,9 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    AgentID
+                  </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     User Name
                   </th>
@@ -411,6 +500,9 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                       key={row.agentId}
                       className="border-b border-gray-100 hover:bg-gray-50"
                     >
+                      <td className="py-3 px-4 text-gray-600">
+                        {row.agentId}
+                      </td>
                       <td className="py-3 px-4 text-gray-600">
                         {row.userName}
                       </td>

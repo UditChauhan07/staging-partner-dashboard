@@ -39,11 +39,12 @@ const CallTest: React.FC<CallTestProps> = ({
   const iconTextLayout = "flex flex-row items-center space-x-4";
 
   const phoneIcon = (
-    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-dark shadow-md" style={{background:'green'}}>
+    <div className="w-12 h-12 flex items-center justify-center rounded-full bg-dark shadow-md"    
+     style={{ background: isCallActive ? "red" : "green" }}
+    >
       <img src="/svg/Phone-call.svg" alt="Phone Call" className="w-6 h-6" />
     </div>
   );
-  console.log('isEndingRef.current', isEndingRef.current,isCallActive,callLoading);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -70,12 +71,12 @@ const CallTest: React.FC<CallTestProps> = ({
           </div>
         </div>
       ) : isCallActive ? (
-        <div className={`${baseDivClasses} bg-red-100`}>
-          <div className={iconTextLayout}>
+        <div className={`${baseDivClasses} bg-red-100`} onClick={onEndCall}>
+          <div className={iconTextLayout} >
             {phoneIcon}
-            <div onClick={onEndCall} className="cursor-pointer">
+            <div  className="cursor-pointer">
               <p className="text-red-800 font-semibold">
-                Call End <span className="text-sm text-black">{displayAgentName}</span>
+                End Call <span className="text-sm text-black">{displayAgentName}</span>
               </p>
               <small className="text-gray-700">{displayBusinessName} Agent is LIVE</small>
             </div>

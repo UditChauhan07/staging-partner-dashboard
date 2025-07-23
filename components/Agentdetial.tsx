@@ -45,7 +45,8 @@ interface BusinessType {
   subtype: string;
   icon: string;
 }
-
+const HTTPS_PREFIX = "https://";
+const PREFIX_LEN = HTTPS_PREFIX.length;
 const allBusinessTypes = [
   {
     type: "Real Estate Broker",
@@ -717,8 +718,8 @@ const AddAgentModal = ({
   }, []);
 
   // const URL = "https://rex-bk.truet.net";
-const URL = process.env.NEXT_PUBLIC_API_URL 
-// ||"https://rexptin.truet.net";
+  const URL = process.env.NEXT_PUBLIC_API_URL
+  // ||"https://rexptin.truet.net";
 
   const fetchKnowledgeBaseName = async () => {
     const name = await getKnowledgeBaseName();
@@ -754,6 +755,32 @@ const URL = process.env.NEXT_PUBLIC_API_URL
     }
   };
 
+  function extractPromptVariables(template, dataObject) {
+    const matches = [...template.matchAll(/{{(.*?)}}/g)];
+    const uniqueVars = new Set(matches.map(m => m[1].trim()));
+
+    // Flatten dataObject to a key-value map
+    const flatData = {};
+
+    function flatten(obj) {
+      for (const key in obj) {
+        const val = obj[key];
+        if (typeof val === "object" && val !== null && 'key' in val && 'value' in val) {
+          flatData[val.key.trim()] = val.value;
+        } else if (typeof val === "object" && val !== null) {
+          flatten(val); // Recursively flatten nested objects
+        }
+      }
+    }
+
+    flatten(dataObject);
+
+    return Array.from(uniqueVars).map(variable => ({
+      name: variable,
+      value: flatData[variable] ?? null,
+      status: true
+    }));
+  }
   useEffect(() => {
     const serviceMap: { [key: string]: string[] } = {};
     businessServices.forEach((b) => {
@@ -801,25 +828,25 @@ const URL = process.env.NEXT_PUBLIC_API_URL
   // }
 
   const handleNext = async () => {
- if (step === 1) {
-  if (!form.userId) return alert("Select a user");
+    if (step === 1) {
+      if (!form.userId) return alert("Select a user");
 
-  try {
-    const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/agent/check_user_free_agent/${form.userId}`
-    );
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/agent/check_user_free_agent/${form.userId}`
+        );
 
-    if (res.data.hasFreeAgent) {
-      return Swal.fire("This user already has a free agent.");
+        if (res.data.hasFreeAgent) {
+          return Swal.fire("This user already has a free agent.");
+        }
+
+        // ✅ Move to next step
+        // or your logic to move next
+      } catch (err) {
+        console.error("Error checking free agent:", err);
+        Swal.fire("Error", "Something went wrong while checking agent status.", "error");
+      }
     }
-
-    // ✅ Move to next step
-     // or your logic to move next
-  } catch (err) {
-    console.error("Error checking free agent:", err);
-    Swal.fire("Error", "Something went wrong while checking agent status.", "error");
-  }
-}
 
     if (step === 2 && !form.businessType)
       return alert("Select at least one business type");
@@ -868,9 +895,10 @@ const URL = process.env.NEXT_PUBLIC_API_URL
         language,
         gender,
         voice,
-        agentname,
+        agentName,
         avatar,
         userId,
+        agentLanguage,
         businessName,
         address,
         email,
@@ -882,26 +910,15 @@ const URL = process.env.NEXT_PUBLIC_API_URL
       } = form;
       console.log(voice, "voice");
 
-      const promptVars = {
-        agentName: form.selectedVoice?.voice_name || "Virtual Assistant",
-        agentGender: form.gender,
-        business: {
-          businessName: businessName || "Your Business",
-          adress: address,
-          email: email,
-          aboutBusiness: about,
-        },
-        languageSelect: language,
-        businessType,
-        commaSeparatedServices: services?.join(", ") || "",
-      };
+const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const currentTime = new Date().toLocaleString("en-US", { timeZone });
       const aboutBusinessForm =
         localStorage.getItem("businessonline") || form.about || "";
 
       const filledPrompt = getAgentPrompt({
         industryKey: businessType === "Other" ? customBuisness : businessType,
         roleTitle: selectedRole,
-        agentName: knowledgebaseName,
+        agentName: form.selectedVoice?.voice_name,
         agentGender: gender,
         business: {
           businessName: businessName || "Your Business",
@@ -914,31 +931,78 @@ const URL = process.env.NEXT_PUBLIC_API_URL
         aboutBusinessForm, // this will now work fine
         commaSeparatedServices: services?.join(", ") || "",
         agentNote: "",
-        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+       timeZone,
+       currentTime
       });
       const filledPrompt2 = getAgentPrompt({
-        industryKey: "{{businessType}}",
-        roleTitle: "{{selectedRole}}",
-        agentName: "{{AgentName}}",
-        agentGender: "{{gender}}",
-        business: {
-          businessName: "{{businessName}}",
-          email: "{{email}}",
-          aboutBusiness: "{{about}}", // this can remain for context
-          address: "{{address}}",
-        },
-        languageSelect: "{{language}}",
-        businessType: "{{businessType}}",
-        aboutBusinessForm: {
-          businessUrl: "{{businesssURl}}",
-          about: "{{About Business}}",
-        }, // this will now work fine
-        commaSeparatedServices: "{{services}}",
-        agentNote: "",
-        timeZone: "{{timeZone}}",
-      });
+ 
+  industryKey: businessType === "Other" ? customBuisness : businessType,
+  roleTitle: selectedRole,
+  agentName: "{{AGENT NAME}}",
+  agentGender: "{{AGENT GENDER}}",
+  business: {
+    businessName: "{{BUSINESS NAME}}",
+    email: "{{BUSINESS EMAIL ID}}",
+    aboutBusiness: "{{MORE ABOUT YOUR BUSINESS}}",
+    address: "{{BUSINESS ADDRESS}}"
+  },
+  languageSelect: "{{LANGUAGE}}",
+  businessType: "{{BUSINESSTYPE}}",
+  aboutBusinessForm: {
+    businessUrl: "{{BUSINESS WEBSITE URL}}", // give unique name
+    about: "{{MORE ABOUT YOUR BUSINESS}}"     // can reuse or separate
+  },
+  commaSeparatedServices: "{{SERVICES}}",
+  agentNote: "{{AGENTNOTE}}",
+  timeZone: "{{TIMEZONE}}"
+});
+
+
+
+     const promptVariablesList = extractPromptVariables(filledPrompt2, {
+  industryKey: businessType === "Other" ? customBuisness : businessType,
+  roleTitle: sessionStorage.getItem("agentRole"),
+  agentName: { key: "AGENT NAME", value:form.selectedVoice?.voice_name.split(" ")[0] || "" },
+  agentGender: { key: "AGENT GENDER", value:gender || "" },
+  business: {
+    businessName: { key: "BUSINESS NAME", value: form.businessName || "" },
+    email: { key: "BUSINESS EMAIL ID", value: form.email || "" },
+    aboutBusiness: {
+      key: "MORE ABOUT YOUR BUSINESS",
+      value: form.aboutBusiness || ""
+    },
+    address: { key: "BUSINESS ADDRESS", value: form.address || "" }
+  },
+  languageSelect: { key: "LANGUAGE", value: agentLanguage || "" },
+  businessType: { key: "BUSINESSTYPE", value: businessType || "" },
+  commaSeparatedServices: {
+    key: "SERVICES",
+    value: services?.join(", ") || ""
+  },
+  timeZone: {
+    key: "TIMEZONE",
+    value: timeZone || ""
+  },
+  aboutBusinessForm: {
+    businessUrl: {
+      key: "BUSINESS WEBSITE URL",
+      value: form.businessUrl || ""
+    }
+  },
+  currentTime:{
+    key:"current_time_[timezone]",
+    value:currentTime||""
+  },
+  agentNote: {
+    key: "AGENTNOTE",
+    value: form.agentNote || ""
+  }
+});
+
+
 
       console.log("generatePrompt", filledPrompt2);
+      console.log(promptVariablesList)
 
       const agentConfig = {
         version: 0,
@@ -947,12 +1011,155 @@ const URL = process.env.NEXT_PUBLIC_API_URL
         model_high_priority: true,
         tool_call_strict_mode: true,
         general_prompt: filledPrompt,
-        general_tools: [],
+        general_tools: [
+          {
+            type: "end_call",
+            name: "end_call",
+            description: "End the call with user.",
+          },
+          {
+            "type": "extract_dynamic_variable",
+            "name": "extract_user_details",
+            "description": "Extract the user's details like name, email, phone number, address, and reason for calling from the conversation",
+            "variables": [
+              {
+                "type": "string",
+                "name": "email",
+                "description": "Extract the user's email address from the conversation"
+              },
+              {
+                "type": "number",
+                "name": "phone",
+                "description": "Extract the user's phone number from the conversation"
+              },
+              {
+                "type": "string",
+                "name": "address",
+                "description": "Extract the user's address from the conversation"
+              },
+              {
+                "type": "string",
+                "name": "reason",
+                "description": "Extract the user's reason for calling from the conversation"
+              },
+              {
+                "type": "string",
+                "name": "name",
+                "description": "Extract the user's name from the conversation\""
+              },
+            ]
+          }
+
+        ],
+        states: [
+          {
+            name: "information_collection",
+            state_prompt: `Greet the user with the begin_message and assist with their query.
+
+                               If the user sounds dissatisfied (angry, frustrated, upset) or uses negative words (like "bad service", "unhappy", "terrible","waste of time"),
+                               ask them: "I'm sorry to hear that. Could you please tell me about your concern?"
+                               Analyze their response. 
+                               
+                                If the concern contains **spam, irrelevant or abusive content**
+                                (e.g., random questions, profanity, jokes), say:
+                                "I’m here to assist with service-related concerns. Could you please share your issue regarding our service?"
+                                and stay in this state.
+
+                                If the concern is **service-related** or **business** (e.g., staff, delay, poor support),
+                                transition to dissatisfaction_confirmation.
+
+                                If the user asks for an appointment (e.g., "appointment", "book", "schedule"),
+                                transition to appointment_booking.
+
+                                If the user is silent or unclear, say: "Sorry, I didn’t catch that. Could you please repeat?"
+                                If the user wants to end the call transition to end_call_state`,
+            edges: [
+
+              {
+                destination_state_name: "dissatisfaction_confirmation",
+                description: "User sounds angry or expresses dissatisfaction."
+              }
+            ]
+          },
+
+          {
+            name: "appointment_booking",
+            state_prompt: "## Task\nYou will now help the user book an appointment."
+          },
+
+          // 🌟 State: Dissatisfaction Confirmation
+          {
+            name: "dissatisfaction_confirmation",
+            state_prompt: `
+                            Say: "I'm sorry you're not satisfied. Would you like me to connect you to a team member? Please say yes or no."
+                            Wait for their response.
+
+                            If the user says yes, transition to call_transfer.
+                            If the user says no, transition to end_call_state.
+                            If the response is unclear, repeat the question once.
+                        `,
+            edges: [
+              {
+                destination_state_name: "call_transfer",
+                description: "User agreed to speak to team member."
+              },
+              {
+                destination_state_name: "end_call_state",
+                description: "User declined to speak to team member."
+              }
+            ],
+            tools: []
+          },
+
+          // 🌟 State: Call Transfer
+          {
+            name: "call_transfer",
+            state_prompt: `
+                            Connecting you to a team member now. Please hold.
+                        `,
+            tools: [
+              {
+                type: "transfer_call",
+                name: "transfer_to_team",
+                description: "Transfer the call to the team member.",
+                transfer_destination: {
+                  type: "predefined",
+                  number: "{{business_Phone}}"
+                },
+                transfer_option: {
+                  type: "cold_transfer",
+                  public_handoff_option: {
+                    message: "Please hold while I transfer your call."
+                  }
+                },
+                speak_during_execution: true,
+                speak_after_execution: true,
+                failure_message: "Sorry, I couldn't transfer your call. Please contact us at {{business_email}} or call {{business_Phone}} directly."
+              }
+            ],
+            edges: []
+          },
+          {
+            name: "end_call_state",
+            state_prompt: `
+                            Politely end the call by saying: "Thank you for calling. Have a great day!"
+                        `,
+            tools: [
+              {
+                type: "end_call",
+                name: "end_call1",
+                description: "End the call with the user."
+              }
+            ],
+            edges: []
+          }
+        ],
         starting_state: "information_collection",
+
         // begin_message: `Hi I’m ${promptVars.agentName}, calling from ${promptVars.business.businessName}. How may I help you?`,
         default_dynamic_variables: {
           customer_name: "John Doe",
-          timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          timeZone: timeZone,
         },
         states: [
           {
@@ -968,6 +1175,10 @@ const URL = process.env.NEXT_PUBLIC_API_URL
           },
         ],
       };
+      const knowledgeBaseId = localStorage.getItem("knowledgeBaseId");
+
+      agentConfig.knowledge_base_ids = [knowledgeBaseId];
+
 
       const llmRes = await axios.post(
         `${URL}/api/agent/createAdmin/llm`,
@@ -1032,19 +1243,20 @@ const URL = process.env.NEXT_PUBLIC_API_URL
       const agentId = agentRes.data.agent_id;
 
       const dbPayload = {
-        userId,
+        userId:localStorage.getItem("AgentForuserId"),
         agent_id: agentId,
         llmId,
         avatar,
         agentVoice: voice,
-        knowledgebaseId: localStorage.getItem("knowledgeBaseId"),
+        knowledgeBaseId: localStorage.getItem("knowledgeBaseId"),
         agentAccent: form.selectedVoice?.voice_accent || "American",
         agentRole: selectedRole,
         agentName: form.selectedVoice?.voice_name || "Virtual Assistant",
         agentLanguageCode: language,
-        agentLanguage: language,
+        agentLanguage: agentLanguage,
         dynamicPromptTemplate: filledPrompt,
         rawPromptTemplate: filledPrompt2,
+        promptVariablesList: JSON.stringify(promptVariablesList),
         agentGender: gender,
         agentPlan: "free",
         agentStatus: true,
@@ -1168,203 +1380,23 @@ const URL = process.env.NEXT_PUBLIC_API_URL
                     className="mb-2"
                   />
                 </div>
-              {allUsers
-  .filter((u) => u.referredBy === localStorage.getItem("referralCode")) // filter by referralCode
-  .filter((u) =>
-    `${u.name} ${u.email}`.toLowerCase().includes(userSearch.toLowerCase())
-  ) // optional search filter
-  .map((u) => (
-    <SelectItem key={u.id} value={u.id}>
-      {u.name} ({u.email})
-    </SelectItem>
-  ))}
+                {allUsers
+                  .filter((u) => u.referredBy === localStorage.getItem("referralCode")) // filter by referralCode
+                  .filter((u) =>
+                    `${u.name} ${u.email}`.toLowerCase().includes(userSearch.toLowerCase())
+                  ) // optional search filter
+                  .map((u) => (
+                    <SelectItem key={u.id} value={u.id}>
+                      {u.name} ({u.email})
+                    </SelectItem>
+                  ))}
 
               </SelectContent>
             </Select>
           </div>
         )}
 
-        {/* {step === 2 && (
-  <div className="space-y-3">
 
- 
-    <div>
-      <label className="block text-sm font-medium">Business Type</label>
-      <Select
-        onValueChange={(val) => {
-          if (val === "Other") {
-            setSelectedType("Other");
-            setForm((prev) => ({
-              ...prev,
-              businessType: "",
-              businessSubtype: "",
-              businessIcon: "",
-              services: [],
-            }));
-          } else {
-            const selected = businessTypes.find((b) => b.type === val);
-            setSelectedType(val);
-            setForm((prev) => ({
-              ...prev,
-              businessType: val,
-              businessSubtype: selected?.subtype || "",
-              businessIcon: selected?.icon || "",
-              services: [],
-            }));
-          }
-        }}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder="Select type" />
-        </SelectTrigger>
-        <SelectContent>
-          <div className="px-2 py-1">
-            <Input
-              placeholder="Search business..."
-              value={businessSearch}
-              onChange={(e) => setBusinessSearch(e.target.value)}
-              className="mb-2"
-            />
-          </div>
-
- 
-          {businessTypes
-            .filter((b) =>
-              `${b.type} ${b.subtype}`.toLowerCase().includes(businessSearch.toLowerCase())
-            )
-            .map((b) => (
-              <SelectItem key={b.type} value={b.type}>
-                {b.type} - {b.subtype}
-              </SelectItem>
-            ))}
-
-       
-          {!businessTypes.some((b) => b.type.toLowerCase() === "other") && (
-            <SelectItem value="Other">Other</SelectItem>
-          )}
-        </SelectContent>
-      </Select>
-
-  
-      {selectedType === "Other" && (
-        <Input
-          placeholder="Add new business type"
-          value={newBusinessType}
-          onChange={(e) => setNewBusinessType(e.target.value)}
-          onBlur={() => {
-            if (
-              newBusinessType &&
-              !businessTypes.some(
-                (b) => b.type.toLowerCase() === newBusinessType.toLowerCase()
-              )
-            ) {
-              const newBusiness = {
-                type: newBusinessType,
-                subtype: "Custom",
-                icon: "svg/Web-Design-Agency-icon.svg",
-              };
-              setBusinessTypes((prev) => [...prev, newBusiness]);
-              setForm((prev) => ({
-                ...prev,
-                businessType: newBusinessType,
-                businessSubtype: "Custom",
-                businessIcon: newBusiness.icon,
-              }));
-            }
-            setNewBusinessType("");
-          }}
-          className="mt-2"
-        />
-      )}
-    </div>
-
-  
-    <div>
-      <label className="block text-sm font-medium mb-1">Business Size</label>
-      <select
-        className="w-full border rounded px-3 py-2 text-sm"
-        value={businessSize}
-        onChange={handleBusinessSizeChange}
-      >
-        <option value="" disabled>Select Business Size</option>
-        <option value="1 to 10 employees">1 to 10 employees</option>
-        <option value="10 to 50 employees">10 to 50 employees</option>
-        <option value="50 to 100 employees">50 to 100 employees</option>
-        <option value="100 to 250 employees">100 to 250 employees</option>
-        <option value="250 to 500 employees">250 to 500 employees</option>
-        <option value="500 to 1000 employees">500 to 1000 employees</option>
-        <option value="1000+ employees">1000+ employees</option>
-      </select>
-    </div>
-
- 
-    <div>
-      <label className="block text-sm font-medium">Select Services</label>
-      {(allServices[selectedType] || []).map((service) => (
-        <div key={service}>
-          <input
-            type="checkbox"
-            checked={form.services?.includes(service)}
-            onChange={() => {
-              const current = form.services || [];
-              const updated = current.includes(service)
-                ? current.filter((s) => s !== service)
-                : [...current, service];
-              setForm((prev) => ({ ...prev, services: updated }));
-            }}
-          />{" "}
-          {service}
-        </div>
-      ))}
-
-    
-      {!((allServices[selectedType] || []).includes("Other")) && (
-        <div>
-          <input
-            type="checkbox"
-            checked={form.services?.includes("Other")}
-            onChange={() => {
-              const current = form.services || [];
-              const updated = current.includes("Other")
-                ? current.filter((s) => s !== "Other")
-                : [...current, "Other"];
-              setForm((prev) => ({ ...prev, services: updated }));
-            }}
-          />{" "}
-          Other
-        </div>
-      )}
-
-      {form.services?.includes("Other") && (
-        <Input
-          placeholder="Add new service"
-          value={newService}
-          onChange={(e) => setNewService(e.target.value)}
-          onBlur={() => {
-            if (
-              newService &&
-              !(allServices[selectedType] || []).includes(newService)
-            ) {
-              const updatedServices = [...(allServices[selectedType] || []), newService];
-              setAllServices((prev) => ({
-                ...prev,
-                [selectedType]: updatedServices,
-              }));
-
-              const updatedFormServices = [
-                ...(form.services || []).filter((s) => s !== "Other"),
-                newService,
-              ];
-              setForm((prev) => ({ ...prev, services: updatedFormServices }));
-            }
-            setNewService("");
-          }}
-          className="mt-2"
-        />
-      )}
-    </div>
-  </div>
-)} */}
         {step === 2 && (
           <div className="space-y-3">
             {/* BUSINESS TYPE */}
@@ -1692,178 +1724,6 @@ const URL = process.env.NEXT_PUBLIC_API_URL
           </div>
         )}
 
-        {/* {step === 3 && (
-  <div className="space-y-4 border rounded-xl p-4 shadow">
-   
-    <Input
-      id="google-autocomplete"
-      placeholder="Search business via Google"
-      className="w-full"
-      value={form.googleBusiness || ""}
-      onChange={(e) => {
-        setForm({ ...form, googleBusiness: e.target.value,  });
-        setHasNoGoogleOrWebsite(false); // uncheck manual enable
-      }}
-      // disabled={hasNoGoogleOrWebsite || form.website}
-    />
-
- 
-   <div className="relative w-full">
-  <Input
-    placeholder="Website URL"
-    value={form.businessUrl || ""}
-    onChange={(e) => {
-      setForm({ ...form, businessUrl: e.target.value,  });
-      setIsWebsiteValid(null); // reset
-    }}
-    onBlur={handleWebsiteBlur}
-    // disabled={hasNoGoogleOrWebsite || form.googleBusiness}
-  />
-
-  {form.businessUrl && (
-    <div className="absolute right-2 top-1/2 -translate-y-1/2">
-      {isVerifying ? (
-        <span className="text-sm text-gray-500">Verifying...</span>
-      ) : isWebsiteValid === true ? (
-        <span className="text-green-600 font-bold">✔️</span>
-      ) : isWebsiteValid === false ? (
-        <span className="text-red-600 font-bold">❌</span>
-      ) : null}
-    </div>
-  )}
-</div>
-
-
-  
-    <label className="inline-flex items-center gap-2 text-sm text-gray-700">
-      <input
-        type="checkbox"
-        checked={hasNoGoogleOrWebsite}
-        onChange={(e) => {
-          const checked = e.target.checked;
-          setHasNoGoogleOrWebsite(checked);
-          if (checked) {
-            setForm({
-              ...form,
-              googleBusiness: "",
-              businessUrl: "",
-            });
-          }
-        }}
-      />
-      <span>I don’t have Google Business or Website URL</span>
-    </label>
-
-    <p className="text-center text-sm text-gray-500">-- OR --</p>
-
-
-    <Input
-      placeholder="Business Name"
-      value={form.businessName}
-      onChange={(e) => setForm({ ...form, businessName: e.target.value })}
-      disabled={!hasNoGoogleOrWebsite}
-    />
-    <Input
-      placeholder="Address"
-      value={form.address}
-      onChange={(e) => setForm({ ...form, address: e.target.value })}
-      disabled={!hasNoGoogleOrWebsite}
-    />
-    <Input
-      placeholder="Phone"
-      value={form.phone}
-      onChange={(e) => setForm({ ...form, phone: e.target.value })}
-      disabled={!hasNoGoogleOrWebsite}
-    />
-    <Input
-      placeholder="Email"
-      value={form.email}
-      onChange={(e) => setForm({ ...form, email: e.target.value })}
-      disabled={!hasNoGoogleOrWebsite}
-    />
-    <Textarea
-      placeholder="About your business"
-      value={form.about}
-      onChange={(e) => setForm({ ...form, about: e.target.value })}
-      disabled={!hasNoGoogleOrWebsite}
-    />
-
-    <button
-      className="bg-purple-600 text-white px-4 py-2 rounded w-full"
-      onClick={async () => {
-        const isValid =
-          form.googleBusiness?.trim() ||
-          form.businessUrl?.trim() ||
-          (hasNoGoogleOrWebsite &&
-            form.businessName &&
-            form.address &&
-            form.phone &&
-            form.email);
-
-        if (!isValid) {
-          alert("Please provide Google Business, Website URL, or manually fill form.");
-          return;
-        }
-       const businessOnlineValue =
-  form.googleBusiness?.trim() ||
-  form.businessUrl?.trim() ||
-  form.about?.trim() || // fallback
-  form.businessName;
-
-
-
-  localStorage.setItem("businessonline", businessOnlineValue);
-        const businessId = localStorage.getItem("businessId");
-        const userId = form.userId;
-
-        const textContent = [
-          {
-            title: "Business Details",
-            text: `Name: ${form.businessName || "N/A"}
-Address: ${form.address || "N/A"}
-Phone: ${form.phone || "N/A"}
-Website: ${form.businessUrl || "N/A"}
-Email: ${form.email || "N/A"}
-About: ${form.about || "N/A"}
-Google: ${form.googleBusiness || "N/A"}`,
-          },
-        ];
-           const knowledgeBaseName = localStorage.getItem("knowledgebaseName");
-        console.log(knowledgeBaseName,"knowledgeBaseName")
-
-     
-
-        try {
-          const formData = new FormData();
-          formData.append("knowledge_base_name", knowledgeBaseName);
-          formData.append("enable_auto_refresh", "true");
-          formData.append("knowledge_base_texts", JSON.stringify(textContent));
-
-          const res = await axios.post(
-            "https://api.retellai.com/create-knowledge-base",
-            formData,
-            {
-              headers: {
-                Authorization: `Bearer ${process.env.NEXT_PUBLIC_RETELL_API}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-
-          const kbId = res?.data?.knowledge_base_id;
-          if (kbId) localStorage.setItem("knowledgeBaseId", kbId);
-
-          setStep((prev) => prev + 1);
-        } catch (err) {
-          console.error("Failed to create knowledge base:", err);
-          alert("Error creating knowledge base. Try again later.");
-        }
-      }}
-    >
-      Save & Continue
-    </button>
-  </div>
-)} */}
 
         {step === 3 && (
           <div className="space-y-4 border rounded-xl p-4 shadow">
@@ -1882,13 +1742,59 @@ Google: ${form.googleBusiness || "N/A"}`,
             {/* Website URL Input */}
             <div className="relative w-full">
               <Input
-                placeholder="Website URL"
+                placeholder="Website URL include https://"
                 value={form.businessUrl || ""}
+
                 onChange={(e) => {
                   setForm({ ...form, businessUrl: e.target.value });
                   setIsWebsiteValid(null);
                 }}
-                onBlur={handleWebsiteBlur}
+               
+                 onKeyDown={(e) => {
+    const input = e.currentTarget;
+    const { key } = e;
+    const { selectionStart, selectionEnd, value } = input;
+
+    // Entire value is selected and user presses Delete or Backspace
+    const fullSelection =
+      selectionStart === 0 && selectionEnd === value.length;
+
+    if (key === "Backspace" || key === "Delete") {
+      if (fullSelection) {
+        e.preventDefault();
+        setForm((prev) => ({ ...prev, businessUrl: HTTPS_PREFIX }));
+        requestAnimationFrame(() => {
+          input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+        });
+        return;
+      }
+
+      // Prevent cursor from going before https://
+      if (selectionStart <= PREFIX_LEN) {
+        e.preventDefault();
+        input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+      }
+    }
+  }}
+  onClick={(e) => {
+    const input = e.currentTarget;
+    if (input.selectionStart < PREFIX_LEN) {
+      input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+    }
+  }}
+  onFocus={(e) => {
+    const input = e.currentTarget;
+    if (!input.value.startsWith(HTTPS_PREFIX)) {
+      setForm((prev) => ({
+        ...prev,
+        businessUrl: HTTPS_PREFIX + input.value,
+      }));
+      requestAnimationFrame(() => {
+        input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+      });
+    }
+  }}
+                 onBlur={handleWebsiteBlur}
               />
               {form.businessUrl && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2">
@@ -2037,7 +1943,7 @@ Google: ${form.googleBusiness || "N/A"}`,
 
                     // PATCH to your backend
                     await axios.patch(
-                      `https://rex-bk.truet.net/api/businessDetails/updateKnowledeBase/${businessId}`,
+                      `${process.env.NEXT_PUBLIC_API_URL}/api/businessDetails/updateKnowledeBase/${businessId}`,
                       {
                         knowledge_base_texts: {
                           businessName: form.businessName || "",
@@ -2091,7 +1997,7 @@ Google: ${form.googleBusiness || "N/A"}`,
         {step === 4 && (
           <div className="space-y-4">
             <label className="block text-sm font-medium">Select Language</label>
-            <Select onValueChange={(v) => setForm({ ...form, language: v })}>
+               <Select onValueChange={(v) => setForm({ ...form, language: v ,agentLanguage:languages?.find((lang) => lang?.locale == v)?.name || v})} value={form.language}>
               <SelectTrigger>
                 <SelectValue placeholder="Choose language" />
               </SelectTrigger>
@@ -2102,9 +2008,8 @@ Google: ${form.googleBusiness || "N/A"}`,
                       <img
                         src={
                           lang.locale
-                            ? `https://flagcdn.com/w20/${
-                                lang.locale.split("-")[1]?.toLowerCase() || "us"
-                              }.png`
+                            ? `https://flagcdn.com/w20/${lang.locale.split("-")[1]?.toLowerCase() || "us"
+                            }.png`
                             : "https://flagcdn.com/w20/us.png"
                         }
                         alt="flag"
@@ -2148,7 +2053,7 @@ Google: ${form.googleBusiness || "N/A"}`,
                     const selectedVoice = filteredVoices.find(
                       (voice) => voice.voice_id === v
                     );
-                    setForm({ ...form, voice: v, selectedVoice });
+                    setForm({ ...form, voice: v, selectedVoice, agentName: v.voice_nameme });
                   }}
                 >
                   <SelectTrigger>
