@@ -45,7 +45,8 @@ interface BusinessType {
   subtype: string;
   icon: string;
 }
-
+const HTTPS_PREFIX = "https://";
+const PREFIX_LEN = HTTPS_PREFIX.length;
 const allBusinessTypes = [
   {
     type: "Real Estate Broker",
@@ -1748,7 +1749,52 @@ const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                   setForm({ ...form, businessUrl: e.target.value });
                   setIsWebsiteValid(null);
                 }}
-                onBlur={handleWebsiteBlur}
+               
+                 onKeyDown={(e) => {
+    const input = e.currentTarget;
+    const { key } = e;
+    const { selectionStart, selectionEnd, value } = input;
+
+    // Entire value is selected and user presses Delete or Backspace
+    const fullSelection =
+      selectionStart === 0 && selectionEnd === value.length;
+
+    if (key === "Backspace" || key === "Delete") {
+      if (fullSelection) {
+        e.preventDefault();
+        setForm((prev) => ({ ...prev, businessUrl: HTTPS_PREFIX }));
+        requestAnimationFrame(() => {
+          input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+        });
+        return;
+      }
+
+      // Prevent cursor from going before https://
+      if (selectionStart <= PREFIX_LEN) {
+        e.preventDefault();
+        input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+      }
+    }
+  }}
+  onClick={(e) => {
+    const input = e.currentTarget;
+    if (input.selectionStart < PREFIX_LEN) {
+      input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+    }
+  }}
+  onFocus={(e) => {
+    const input = e.currentTarget;
+    if (!input.value.startsWith(HTTPS_PREFIX)) {
+      setForm((prev) => ({
+        ...prev,
+        businessUrl: HTTPS_PREFIX + input.value,
+      }));
+      requestAnimationFrame(() => {
+        input.setSelectionRange(PREFIX_LEN, PREFIX_LEN);
+      });
+    }
+  }}
+                 onBlur={handleWebsiteBlur}
               />
               {form.businessUrl && (
                 <div className="absolute right-2 top-1/2 -translate-y-1/2">

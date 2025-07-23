@@ -194,7 +194,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
     startIndex,
     startIndex + agentsPerPage
   );
-
+  console.log(paginatedAgents)
   const handleDeleteClick = (agent: AgentBusinessRow) => {
     setSelectedAgent(agent);
     setShowConfirm(true);
@@ -445,6 +445,9 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
               <thead>
                 <tr className="border-b border-gray-200">
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                    AgentID
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     User Name
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-700">
@@ -497,6 +500,9 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
                       key={row.agentId}
                       className="border-b border-gray-100 hover:bg-gray-50"
                     >
+                      <td className="py-3 px-4 text-gray-600">
+                        {row.agentId}
+                      </td>
                       <td className="py-3 px-4 text-gray-600">
                         {row.userName}
                       </td>
