@@ -5,6 +5,7 @@ import axios from "axios";
 import { updateAgent } from "@/Services/auth";
 import Swal from "sweetalert2";
 import { FadeLoader } from "react-spinners";
+import ClipLoader from "react-spinners/ClipLoader";
 
 const AssignNumberModal = ({
   isOpen,
@@ -20,7 +21,7 @@ const AssignNumberModal = ({
   const [popupMessage, setPopupMessage] = useState("");
   const [popupType, setPopupType] = useState("success");
   const [isSubmitting, setIsSubmitting] = useState(false);
-    console.log(agentDetails, "agentDetails");
+    // console.log(agentDetails, "agentDetails");
   const handleAssignNumber = async () => {
     try {   
       if (isSubmitting) return;
@@ -49,11 +50,11 @@ const AssignNumberModal = ({
     //       },
     //     }
     //   );
-    console.log(response);
+    // console.log(response);
       if(response.data.status == true) {
         const phoneNumber = response?.data?.phone_number;
 
-      Swal.fire(`Number ${phoneNumber} assigned and saved!`);
+      Swal.fire(`Number ${phoneNumber} assigned!`);
       if (onAgentDetailsPage) onAssignNumber();
     }
 } catch (error) {
@@ -111,7 +112,7 @@ const AssignNumberModal = ({
           >
             {loading ? (
             <div className="flex items-center gap-2">
-                <FadeLoader radius={1}  color="#ffffffff" />
+                <ClipLoader size={22}  color="#ffffffff" />
                 <span>Assigning...</span>
                 </div>
             ) : (
