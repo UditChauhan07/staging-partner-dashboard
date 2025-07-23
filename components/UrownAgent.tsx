@@ -14,6 +14,11 @@ import Modal from "./ui/modal";
 import CallTest from "./CallTest";
 import { RetellWebClient } from "retell-client-js-sdk";
 import AssignNumberModal from "./ui/AssignNumberModal";
+import PhoneInput from "react-phone-input-2";
+import { isValidPhoneNumber, parsePhoneNumber ,parsePhoneNumberFromString} from "libphonenumber-js";
+import "react-phone-input-2/lib/style.css"
+import ClipLoader from "react-spinners/ClipLoader";
+
 
 const avatars = {
   Male: [
@@ -46,6 +51,7 @@ export default function AgentFormSetup() {
   const [voices, setVoices] = useState<any[]>([]);
   const [playingIdx, setPlayingIdx] = useState<number | null>(null);
   const [loading, setLoading] = useState(false)
+  const [cancelLoading, setcancelLoading] = useState(false)
   const audioRefs = useRef<HTMLAudioElement[]>([]);
   const [agentExists, setAgentExists] = useState<null | boolean>(null);
   const [agentData, setAgentData] = useState<any>(null);
@@ -69,8 +75,228 @@ export default function AgentFormSetup() {
   const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
   const [selectedAgentDetails, setSelectedAgentDetails] = useState<any>(null);
   const [mode, setMode] = useState<"create" | "edit">("create");
+  const [showCallForwardingModal, setShowCallForwardingModal] = useState(false); // State for modal
+  const [phoneError, setPhoneError] = useState("")
+  const [phone, setPhone] = useState("")
+  const phoneInputRef = useRef(null);
 
-console.log('mode',mode,form)
+
+
+function getCallForwarding(callForwarding:string){
+let msg=''
+if(callForwarding){
+    msg=`Transition to CallTransfer_confirmation.`
+}else{
+    msg=`Say: "Call forwarding is not available.`
+}
+return msg;
+}
+
+const handleUpdateLLM_ForCallForwarding = async (
+  agentId: string,
+  partnerName: string,
+  llm: string,  
+  phone: string,
+  callForwarding: boolean,
+  callForwardingOptions: any
+) => {
+ 
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;    
+
+      const agentConfig = {
+          version: 0,     
+          general_tools: [
+            {
+              type: "end_call",
+              name: "end_call",
+              description: "End the call with user.",
+            },
+            {
+              type: "extract_dynamic_variable",
+              name: "extract_user_details",
+              description: "Extract the user's details like name, email, phone number, address, and reason for calling from the conversation",
+              variables: [
+                { type: "string", name: "email", description: "Extract the user's email address from the conversation" },
+                { type: "number", name: "phone", description: "Extract the user's phone number from the conversation" },
+                { type: "string", name: "address", description: "Extract the user's address from the conversation" },
+                { type: "string", name: "reason", description: "Extract the user's reason for calling from the conversation" },
+                { type: "string", name: "name", description: "Extract the user's name from the conversation" },
+              ],
+            },
+          ],
+          states: [
+            {
+              name: "information_collection",
+              state_prompt: `Greet the user with the begin_message and assist with their query.
+
+                                If the user wants to transfer the call:
+                                ${getCallForwarding(callForwarding)} 
+
+                                If the user asks for an appointment (e.g., "appointment", "book", "schedule"),
+                                transition to appointment_booking.
+
+                                If the user is silent or unclear, say: "Sorry, I didn’t catch that. Could you please repeat?"
+                                If the user wants to end the call transition to end_call_state`,
+              edges: [
+                { destination_state_name: "CallTransfer_confirmation", description: "User wants to transfer call." },
+              ],
+            },
+            {
+              name: "appointment_booking",
+              state_prompt: "## Task\nYou will now help the user book an appointment.",
+            },
+            {
+              name: "CallTransfer_confirmation",
+              state_prompt: `
+                              Say: Would you like me to connect you with {{partner}}? Please say yes or no."
+                              Wait for their response.
+                              If the user says yes, transition to call_transfer.
+                              If the user says no, transition to information_collection.
+                              If the response is unclear, repeat the question once.
+                          `,
+              edges: [
+                { destination_state_name: "call_transfer", description: "User agreed to speak to Partner." },
+                { destination_state_name: "information_collection", description: "User declined to speak to Partner." },
+              ],
+              tools: [],
+            },
+            {
+              name: "call_transfer",
+              state_prompt: `Connecting you with Mr. {{partner}} now. Please hold.`,
+              tools: [
+                {
+                  type: "transfer_call",
+                  name: "transfer_to_Partner",
+                  description: "Transfer the call to the Partner.",
+                  transfer_destination: { type: "predefined", number: "{{business_Phone}}" },
+                  transfer_option: { type: "cold_transfer", public_handoff_option: { message: "Please hold while I transfer your call." } },
+                  speak_during_execution: true,
+                  speak_after_execution: true,
+                  failure_message: "Sorry, I couldn't transfer your call. Please contact us at {{business_email}} or call {{business_Phone}} directly.",
+                },
+              ],
+              edges: [],
+            },
+            {
+              name: "end_call_state",
+              state_prompt: `Politely end the call by saying: "Thank you for calling. Have a great day!"`,
+              tools: [{ type: "end_call", name: "end_call1", description: "End the call with the user." }],
+              edges: [],
+            },
+          ],
+          starting_state: "information_collection",
+          default_dynamic_variables: {
+            customer_name: "John Doe",
+            timeZone: timeZone,
+            partner:partnerName,
+            business_Phone: phone || "",
+          },
+        };
+  try {
+    await axios.post(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/agent/updatePartnerAgentConfig`,
+      {
+        agentId,
+        llm,
+        callForwarding,
+        callForwardingOptions,
+        agentConfig,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    Swal.fire("Success", "Call forwarding Settings updated!", "success");
+  } catch (error) {
+    console.error("Error updating call forwarding:", error);
+    Swal.fire("Error", "An error occurred while updating call forwarding", "error");
+  }
+}
+ const  handleStopCallForwardingSubmit=async()=>{
+  setcancelLoading(true)
+    const partnerName=localStorage.getItem("partnername") || "Partner"
+    await handleUpdateLLM_ForCallForwarding(
+    agentData.agent_id,
+    partnerName,  
+    agentData.llmId,
+    "",
+    false,
+    null
+  );
+  setcancelLoading(false)
+   setRefresh((prev)=>!prev)
+    setShowCallForwardingModal(false);
+    setPhone("");
+    setPhoneError("");
+ }
+
+
+  // }
+  const handleCallForwardingSubmit = async () => {
+    if (!phone) {
+      setPhoneError("Phone number is required.");
+      return;
+    }
+    // Validate phone number
+    const phoneNumber = parsePhoneNumberFromString("+" + phone);
+      if (!phoneNumber){ setPhoneError("Invalid phone number format.");return}
+      if (!phoneNumber.isValid()){setPhoneError("Invalid number for selected country.");return}
+ 
+
+    // Log for next component
+    // console.log("Call forwarding phone number:", phoneNumber?.number,agentData);
+    const partnerName=localStorage.getItem("partnername") || "Partner"
+    setLoading(true)
+    await handleUpdateLLM_ForCallForwarding(
+    agentData.agent_id,
+    partnerName,  
+    agentData.llmId,
+    phoneNumber?.number,
+    true,
+    {
+      transsferType: "Self",
+      phone:phoneNumber?.number,
+      ring_timeout: 20,
+    }
+  );
+
+    // Swal.fire("Phone number saved! Ready for next component.");
+     setLoading(false)
+    setRefresh((prev)=>!prev)
+    setShowCallForwardingModal(false);
+    setPhone("");
+    setPhoneError("");
+  };
+
+// console.log('mode',mode,showCallForwardingModal,phone)
+  function extractPromptVariables(template, dataObject) {
+        const matches = [...template.matchAll(/{{(.*?)}}/g)];
+        const uniqueVars = new Set(matches.map(m => m[1].trim()));
+
+        // Flatten dataObject to a key-value map
+        const flatData = {};
+
+        function flatten(obj) {
+            for (const key in obj) {
+                const val = obj[key];
+                if (typeof val === "object" && val !== null && 'key' in val && 'value' in val) {
+                    flatData[val.key.trim()] = val.value;
+                } else if (typeof val === "object" && val !== null) {
+                    flatten(val); // Recursively flatten nested objects
+                }
+            }
+        }
+
+        flatten(dataObject);
+
+        return Array.from(uniqueVars).map(variable => ({
+            name: variable,
+            value: flatData[variable] ?? null,
+            status: true
+        }));
+    }
   useEffect(() => {
     const client = new RetellWebClient();
     client.on("call_started", () => setIsCallActive(true));
@@ -397,6 +623,7 @@ console.log('mode',mode,form)
       const partnerFirstName = partnername.split(" ")[0];
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       const currentTime = new Date().toLocaleString("en-US", { timeZone });
+    
 
       const filledPrompt = `
 You are ${form.agentName}, a ${form.gender} assistant to ${partnername}, 
@@ -442,13 +669,58 @@ Keep the conversation concise and to the point.
 The user transcript might contain transcription errors. Use your best judgment to guess and respond.
 
 
-`;
+      `;
 
-      const promptVariablesList = {
+  const rawPromptTemplate = `
+You are {{AGENT NAME}}, a {{AGENT GENDER}} assistant to {{PARTNER FULL NAME}}, 
+who helps {{PARTNER FIRST NAME}} in selling the services of “Receptin”. You can explain all about the Receptin application and its features based on the added knowledge base.
+
+
+
+### Persona of the Receptioni {{AGENT NAME}} who answers inbound calls on behalf of  {{PARTNER FULL NAME"}} to help sell AI Receptionist Service named “Receptin” using which anyone can create a virtual AI receptionist for their business. The details of the service and its features can be taken from the Knowledge Base. 
+
+- Skills: Customer service, Sales Development, communication skills, problem solving, emergency response handling, services knowledge from the knowledge base, and caller data collection.
+Greet the caller with a warm welcome directly in language the language code is this  {{LANGUAGE}}. Do not repeat the greeting in another language.
+You can shift to multi language, if the caller asks you to or if you switch the language in between of the conversation.
+
+
+1. Clarity and Simplicity: Keep responses clear, concise, and to the point. Use simple language and avoid unnecessary details to ensure the caller easily understands the information provided.
+2. Personalization: Tailor interactions to be empathetic and polite. Please keep your response natural.
+3. Focus on each step: Remember the steps to sell the AI Receptionist Service, and that you must stay on track with these steps.
+- Process to follow: Take all the details of the caller, like name, phone number, email address, and business name, before guiding them further.
+
+- Behaviour: Calm, Pleasing, and professional. Do not show too much excitement while talking. Do not say "Thanks" or "Thank you" more than twice in a call. Stay focused on more human-like behaviour. Control your excitement and talk normally. Be very concise and quick in your conversations.
+
+### Rules for AI Voice Assistant:
+
+The agent must respect multi and converse only in that language.
+- Current Time: {{CURRENT TIME}}  
+- Timezone:{{TIMEZONE}}
+
+
+### More Instructions
+You can assist callers with the following:
+- General inquiries, such as Services Information
+- Book Meetings with Technical Specialists if the caller wants the enterprise package, for which the price is not listed.
+- Assist the caller in buying the correct package for a specific business
+- Guide them on a step-by-step Process to purchase the optimum package and set up a new AI receptionist for their specific business based on the Knowledge Base.
+- Take the project details from the caller for Future Interactions
+- Take Details of the caller and the Business for which an AI Receptionist is required
+- Handle Complaints with a calm & natural voice and provide an accurate solution to the complaint.
+- If no solution is accepted by the caller and the caller is adamant to talk to a human only, then only transfer the call to a human representative.
+
+Keep the conversation concise and to the point.
+
+The user transcript might contain transcription errors. Use your best judgment to guess and respond.
+
+
+      `;
+
+   const promptVariablesList = extractPromptVariables(rawPromptTemplate,{
         agentName: { key: "AGENT NAME", value: form.agentName?.split(" ")[0] || "Assistant" },
         agentGender: { key: "AGENT GENDER", value: form.gender || "neutral" },
-        partnerNameFull: { key: "PARTNER FULL NAME", value: "Receptin" },
-        partnerNameHalf: { key: "PARTNER HALF NAME", value: "Receptin" },
+        partnerNameFull: { key: "PARTNER FULL NAME", value: partnername },
+        partnerFirstName: { key: "PARTNER FIRST NAME", value: partnerFirstName },
         businessName: { key: "BUSINESS NAME", value: "Receptin" },
         businessEmail: { key: "BUSINESS EMAIL ID", value: "support@rxpt.us" },
         aboutBusiness: { key: "MORE ABOUT YOUR BUSINESS", value: "We provide virtual AI receptionist services." },
@@ -461,7 +733,7 @@ The user transcript might contain transcription errors. Use your best judgment t
         timeZone: { key: "TIMEZONE", value: timeZone },
         current_time: { key: "CURRENT TIME", value: currentTime },
         [`current_time_[${timeZone}]`]: { key: `CURRENT TIME IN ${timeZone}`, value: currentTime },
-      };
+      });
       const agentConfig = {
         version: 0,
         model: "gemini-2.0-flash",
@@ -515,28 +787,18 @@ The user transcript might contain transcription errors. Use your best judgment t
             name: "information_collection",
             state_prompt: `Greet the user with the begin_message and assist with their query.
 
-                               If the user sounds dissatisfied (angry, frustrated, upset) or uses negative words (like "bad service", "unhappy", "terrible","waste of time"),
-                               ask them: "I'm sorry to hear that. Could you please tell me about your concern?"
-                               Analyze their response. 
-                               
-                                If the concern contains **spam, irrelevant or abusive content**
-                                (e.g., random questions, profanity, jokes), say:
-                                "I’m here to assist with service-related concerns. Could you please share your issue regarding our service?"
-                                and stay in this state.
+                            If the user wants to transfer the call, then say Call forwarding is not available. .
 
-                                If the concern is **service-related** or **business** (e.g., staff, delay, poor support),
-                                transition to dissatisfaction_confirmation.
+                            If the user asks for an appointment (e.g., "appointment", "book", "schedule"),
+                            transition to appointment_booking.
 
-                                If the user asks for an appointment (e.g., "appointment", "book", "schedule"),
-                                transition to appointment_booking.
-
-                                If the user is silent or unclear, say: "Sorry, I didn’t catch that. Could you please repeat?"
-                                If the user wants to end the call transition to end_call_state`,
+                            If the user is silent or unclear, say: "Sorry, I didn’t catch that. Could you please repeat?"
+                            If the user wants to end the call transition to end_call_state`,
             edges: [
 
               {
-                destination_state_name: "dissatisfaction_confirmation",
-                description: "User sounds angry or expresses dissatisfaction."
+                destination_state_name: "CallTransfer_confirmation",
+                description: "User wants to tranfer call to talk ."
               }
             ]
           },
@@ -548,25 +810,18 @@ The user transcript might contain transcription errors. Use your best judgment t
 
           // 🌟 State: Dissatisfaction Confirmation
           {
-            name: "dissatisfaction_confirmation",
-            state_prompt: `
-                            Say: "I'm sorry you're not satisfied. Would you like me to connect you to a team member? Please say yes or no."
-                            Wait for their response.
-
-                            If the user says yes, transition to call_transfer.
-                            If the user says no, transition to end_call_state.
-                            If the response is unclear, repeat the question once.
-                        `,
-            edges: [
-              {
-                destination_state_name: "call_transfer",
-                description: "User agreed to speak to team member."
-              },
-              {
-                destination_state_name: "end_call_state",
-                description: "User declined to speak to team member."
-              }
-            ],
+            name: "CallTransfer_confirmation",
+         state_prompt: `
+                              Say: Would you like me to connect you with {{partner}}? Please say yes or no."
+                              Wait for their response.
+                              If the user says yes, transition to call_transfer.
+                              If the user says no, transition to information_collection.
+                              If the response is unclear, repeat the question once.
+                          `,
+              edges: [
+                { destination_state_name: "call_transfer", description: "User agreed to speak to Partner." },
+                { destination_state_name: "information_collection", description: "User declined to speak to partner." },
+              ],
             tools: []
           },
 
@@ -579,7 +834,7 @@ The user transcript might contain transcription errors. Use your best judgment t
             tools: [
               {
                 type: "transfer_call",
-                name: "transfer_to_team",
+                name: "transfer_to_Partner",
                 description: "Transfer the call to the team member.",
                 transfer_destination: {
                   type: "predefined",
@@ -819,24 +1074,72 @@ The user transcript might contain transcription errors. Use your best judgment t
   The user transcript might contain transcription errors. Use your best judgment to guess and respond.
   `;
 
-        const promptVariablesList = {
-          agentName: { key: "AGENT NAME", value: form.agentName?.split(" ")[0] || "Assistant" },
-          agentGender: { key: "AGENT GENDER", value: form.gender || "neutral" },
-          partnerNameFull: { key: "PARTNER FULL NAME", value: "Receptin" },
-          partnerNameHalf: { key: "PARTNER HALF NAME", value: "Receptin" },
-          businessName: { key: "BUSINESS NAME", value: "Receptin" },
-          businessEmail: { key: "BUSINESS EMAIL ID", value: "support@rxpt.us" },
-          aboutBusiness: { key: "MORE ABOUT YOUR BUSINESS", value: "We provide virtual AI receptionist services." },
-          businessAddress: { key: "BUSINESS ADDRESS", value: "11210 NW 45th St #, Coral Springs, FL 33065, United States" },
-          businessWebsite: { key: "BUSINESS WEBSITE", value: "www.rxpt.us" },
-          businessPhone: { key: "BUSINESS PHONE", value: "+1 (772) 271 7966" },
-          businessType: { key: "BUSINESSTYPE", value: "AI Virtual Receptionist" },
-          commaSeparatedServices: { key: "SERVICES", value: "AI Virtual Receptionist Service" },
-          languageSelect: { key: "LANGUAGE", value: form.language || "English" },
-          timeZone: { key: "TIMEZONE", value: timeZone },
-          current_time: { key: "CURRENT TIME", value: currentTime },
-          [`current_time_[${timeZone}]`]: { key: `CURRENT TIME IN ${timeZone}`, value: currentTime },
-        };
+    
+     const rawPromptTemplate = `
+You are {{AGENT NAME}}, a {{AGENT GENDER}} assistant to {{PARTNER FULL NAME}}, 
+who helps {{PARTNER FIRST NAME}} in selling the services of “Receptin”. You can explain all about the Receptin application and its features based on the added knowledge base.
+
+
+
+### Persona of the Receptioni {{AGENT NAME}} who answers inbound calls on behalf of  {{PARTNER FULL NAME"}} to help sell AI Receptionist Service named “Receptin” using which anyone can create a virtual AI receptionist for their business. The details of the service and its features can be taken from the Knowledge Base. 
+
+- Skills: Customer service, Sales Development, communication skills, problem solving, emergency response handling, services knowledge from the knowledge base, and caller data collection.
+Greet the caller with a warm welcome directly in language the language code is this  {{LANGUAGE}}. Do not repeat the greeting in another language.
+You can shift to multi language, if the caller asks you to or if you switch the language in between of the conversation.
+
+
+1. Clarity and Simplicity: Keep responses clear, concise, and to the point. Use simple language and avoid unnecessary details to ensure the caller easily understands the information provided.
+2. Personalization: Tailor interactions to be empathetic and polite. Please keep your response natural.
+3. Focus on each step: Remember the steps to sell the AI Receptionist Service, and that you must stay on track with these steps.
+- Process to follow: Take all the details of the caller, like name, phone number, email address, and business name, before guiding them further.
+
+- Behaviour: Calm, Pleasing, and professional. Do not show too much excitement while talking. Do not say "Thanks" or "Thank you" more than twice in a call. Stay focused on more human-like behaviour. Control your excitement and talk normally. Be very concise and quick in your conversations.
+
+### Rules for AI Voice Assistant:
+
+The agent must respect multi and converse only in that language.
+- Current Time: {{CURRENT TIME}}  
+- Timezone:{{TIMEZONE}}
+
+
+### More Instructions
+You can assist callers with the following:
+- General inquiries, such as Services Information
+- Book Meetings with Technical Specialists if the caller wants the enterprise package, for which the price is not listed.
+- Assist the caller in buying the correct package for a specific business
+- Guide them on a step-by-step Process to purchase the optimum package and set up a new AI receptionist for their specific business based on the Knowledge Base.
+- Take the project details from the caller for Future Interactions
+- Take Details of the caller and the Business for which an AI Receptionist is required
+- Handle Complaints with a calm & natural voice and provide an accurate solution to the complaint.
+- If no solution is accepted by the caller and the caller is adamant to talk to a human only, then only transfer the call to a human representative.
+
+Keep the conversation concise and to the point.
+
+The user transcript might contain transcription errors. Use your best judgment to guess and respond.
+
+
+      `;
+
+      const promptVariablesList = extractPromptVariables(rawPromptTemplate,{
+        agentName: { key: "AGENT NAME", value: form.agentName?.split(" ")[0] || "Assistant" },
+        agentGender: { key: "AGENT GENDER", value: form.gender || "neutral" },
+        partnerNameFull: { key: "PARTNER FULL NAME", value: partnername },
+        partnerFirstName: { key: "PARTNER FIRST NAME", value: partnerFirstName },
+        businessName: { key: "BUSINESS NAME", value: "Receptin" },
+        businessEmail: { key: "BUSINESS EMAIL ID", value: "support@rxpt.us" },
+        aboutBusiness: { key: "MORE ABOUT YOUR BUSINESS", value: "We provide virtual AI receptionist services." },
+        businessAddress: { key: "BUSINESS ADDRESS", value: "11210 NW 45th St #, Coral Springs, FL 33065, United States" },
+        businessWebsite: { key: "BUSINESS WEBSITE", value: "www.rxpt.us" },
+        businessPhone: { key: "BUSINESS PHONE", value: "+1 (772) 271 7966" },
+        businessType: { key: "BUSINESSTYPE", value: "AI Virtual Receptionist" },
+        commaSeparatedServices: { key: "SERVICES", value: "AI Virtual Receptionist Service" },
+        languageSelect: { key: "LANGUAGE", value: form.language || "English" },
+        timeZone: { key: "TIMEZONE", value: timeZone },
+        current_time: { key: "CURRENT TIME", value: currentTime },
+        [`current_time_[${timeZone}]`]: { key: `CURRENT TIME IN ${timeZone}`, value: currentTime },
+      });
+
+      const callForwarding=agentData.callForwarding;
 
         const agentConfig = {
           version: 0,
@@ -868,18 +1171,15 @@ The user transcript might contain transcription errors. Use your best judgment t
             {
               name: "information_collection",
               state_prompt: `Greet the user with the begin_message and assist with their query.
-                            If the user sounds dissatisfied (angry, frustrated, upset) or uses negative words (like "bad service", "unhappy", "terrible","waste of time"),
-                            ask them: "I'm sorry to hear that. Could you please tell me about your concern?"
-                            Analyze their response.
-                            If the concern contains **spam, irrelevant or abusive content** (e.g., random questions, profanity, jokes), say:
-                            "I’m here to assist with service-related concerns. Could you please share your issue regarding our service?"
-                            and stay in this state.
-                            If the concern is **service-related** or **business** (e.g., staff, delay, poor support), transition to dissatisfaction_confirmation.
-                            If the user asks for an appointment (e.g., "appointment", "book", "schedule"), transition to appointment_booking.
-                            If the user is silent or unclear, say: "Sorry, I didn’t catch that. Could you please repeat?"
-                            If the user wants to end the call transition to end_call_state`,
+                              If the user wants to transfer the call:
+                              ${getCallForwarding(callForwarding)} 
+                                                               
+                              If the user asks for an appointment (e.g., "appointment", "book", "schedule"),transition to appointment_booking.
+
+                                If the user is silent or unclear, say: "Sorry, I didn’t catch that. Could you please repeat?"
+                                If the user wants to end the call transition to end_call_state`,
               edges: [
-                { destination_state_name: "dissatisfaction_confirmation", description: "User sounds angry or expresses dissatisfaction." },
+                { destination_state_name: "CallTransfer_confirmation", description: "User wants to transfer call." },
               ],
             },
             {
@@ -887,17 +1187,17 @@ The user transcript might contain transcription errors. Use your best judgment t
               state_prompt: "## Task\nYou will now help the user book an appointment.",
             },
             {
-              name: "dissatisfaction_confirmation",
+              name: "CallTransfer_confirmation",
               state_prompt: `
-                              Say: "I'm sorry you're not satisfied. Would you like me to connect you to a team member? Please say yes or no."
+                              Say: Would you like me to connect you with {{partner}}? Please say yes or no."
                               Wait for their response.
                               If the user says yes, transition to call_transfer.
-                              If the user says no, transition to end_call_state.
+                              If the user says no, transition to information_collection.
                               If the response is unclear, repeat the question once.
                           `,
               edges: [
-                { destination_state_name: "call_transfer", description: "User agreed to speak to team member." },
-                { destination_state_name: "end_call_state", description: "User declined to speak to team member." },
+                { destination_state_name: "call_transfer", description: "User agreed to speak to Partner." },
+                { destination_state_name: "information_collection", description: "User declined to speak to Partner." },
               ],
               tools: [],
             },
@@ -907,7 +1207,7 @@ The user transcript might contain transcription errors. Use your best judgment t
               tools: [
                 {
                   type: "transfer_call",
-                  name: "transfer_to_team",
+                  name: "transfer_to_Partner",
                   description: "Transfer the call to the team member.",
                   transfer_destination: { type: "predefined", number: "{{business_Phone}}" },
                   transfer_option: { type: "cold_transfer", public_handoff_option: { message: "Please hold while I transfer your call." } },
@@ -931,7 +1231,7 @@ The user transcript might contain transcription errors. Use your best judgment t
             timeZone: timeZone,
           },
         };
-
+  
         // Update LLM configuration
         await axios.patch(
           `https://api.retellai.com/update-retell-llm/${llmId} `,
@@ -1022,7 +1322,6 @@ The user transcript might contain transcription errors. Use your best judgment t
 }
 
 
-
   if (agentExists === null) {
     return (
 
@@ -1069,6 +1368,21 @@ The user transcript might contain transcription errors. Use your best judgment t
                     </button>
                   </li>
                   </>}
+                  {!agentData?.voip_numbers && !agentData.isDeactivated &&(
+                  <>
+                <li>
+                  <button
+                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
+                    onClick={() => {
+                      setAssignPhoneModal(true);
+                      setShowAssignModal(true);
+                      setShowDropdown(false); 
+                    }}
+                  >
+                    📱 Assign Phone Number
+                  </button>
+                </li> 
+                </>)}
                   {!agentData.isDeactivated && <>
                   <li>
                   <button
@@ -1092,32 +1406,21 @@ The user transcript might contain transcription errors. Use your best judgment t
                   </button>
                 </li>
                 </>}
-                {!agentData?.voip_numbers && !agentData.isDeactivated &&(
-                  <>
-                <li>
+                
+                {!agentData.isDeactivated && <>
+                  <li>
                   <button
                     className="w-full px-5 py-2 hover:bg-gray-100 text-left"
                     onClick={() => {
-                      setAssignPhoneModal(true);
-                      setShowAssignModal(true);
-                      setShowDropdown(false); 
-                    }}
-                  >
-                    📱 Assign Phone Number
-                  </button>
-                </li> 
-                </>)}
-                  {/* <li>
-                  <button
-                    className="w-full px-5 py-2 hover:bg-gray-100 text-left"
-                    onClick={() => {
-                      setShowCancelConfirm(true);
+                      setShowCallForwardingModal(true);
                       setShowDropdown(false);
                     }}
                   >
-                    ❌ Cancel Subscription
+                    <span className="text-green-600"> 📲</span>
+                   {" "} Call Forwarding
                   </button>
-                </li> */}
+                </li>
+                </>}
                  {!agentData.isDeactivated && <> <li>
                     <button
                       className="w-full px-4 py-2 hover:bg-gray-100 text-left"
@@ -1126,7 +1429,7 @@ The user transcript might contain transcription errors. Use your best judgment t
 
                         const result = await Swal.fire({
                           title: "Are you sure?",
-                          text: "You want to deactivate this agent?",
+                          html: "You are about to deactivate this agent.<br><strong>This may lead to the deletion of the assigned phone number, if any.</strong>",
                           icon: "warning",
                           showCancelButton: true,
                           confirmButtonColor: "#3085d6",
@@ -1166,22 +1469,24 @@ The user transcript might contain transcription errors. Use your best judgment t
                     </button>
                   </li>
                   </>}
-               <li>
-                <button
-                  className="w-full px-5 py-2 hover:bg-gray-100 text-left flex items-center gap-2"
-                  onClick={() => {
-                    setShowCancelConfirm(true);
-                    setShowDropdown(false);
-                    Swal.fire(
-                      "Agent Deactivated",
-                      "Please contact support to activate your agent.",
-                      "info"
-                    );
-                  }}
-                >
-                  ✅ Activate Agent
-                </button>
-              </li>
+                  {agentData.isDeactivated && <>
+                  <li>
+                    <button
+                      className="w-full px-5 py-2 hover:bg-gray-100 text-left flex items-center gap-2"
+                      onClick={() => {
+                        setShowCancelConfirm(true);
+                        setShowDropdown(false);
+                        Swal.fire(
+                          "Agent Deactivated",
+                          "Please contact support to activate your agent.",
+                          "info"
+                        );
+                      }}
+                    >
+                      ✅ Activate Agent
+                    </button>
+                  </li>
+                  </>}
                 </ul>
               </div>
             )}
@@ -1221,6 +1526,66 @@ The user transcript might contain transcription errors. Use your best judgment t
                   />
           
             )}
+            {showCallForwardingModal && (
+              <Modal
+                isOpen={showCallForwardingModal}
+                onClose={() => {
+                  if(loading)return;
+                  setShowCallForwardingModal(false);
+                  setPhone("");
+                  setPhoneError("");
+                }}
+                title="Call Forwarding"
+                width="max-w-md"
+              >
+                <div className="space-y-4">
+                  <div>
+                    <label htmlFor="contactNumber">Contact Number</label>
+                    <PhoneInput
+                      country={"in"} // Default country: India
+                      value={phone|| agentData.callForwardingOptions}
+                      onChange={(phone) => {
+                         setPhone(phone);
+                        setPhoneError(""); // Clear error on change
+                      }}
+                      inputClass="!w-full !text-sm !rounded !border !border-gray-300"
+                      containerClass="!w-full"
+                      inputProps={{
+                        name: "phone",
+                        required: true,
+                        id: "contactNumber",
+                      }}
+                      specialLabel={""}
+                      inputComponentRef={phoneInputRef} // Attach ref to PhoneInput
+                    />
+                    {phoneError && <p className="text-red-500 text-sm mt-1">{phoneError}</p>}
+                  </div>
+                  <div className="flex gap-4">
+                    {
+                    agentData?.callForwarding && <Button disabled={cancelLoading||loading} className="w-full" style={{background:"red"}} onClick={handleStopCallForwardingSubmit}>
+                     {cancelLoading ? <ClipLoader color="#6524EB" size={18}/> : 'Stop Forwarding' }
+                    </Button>
+                    }
+                    <Button className="w-full" onClick={handleCallForwardingSubmit} disabled={loading}>
+                       {loading ? <ClipLoader color="#6524EB" size={18} /> : agentData?.callForwarding ? 'Edit':'Save'}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => {
+                        setShowCallForwardingModal(false);
+                       setPhone("");
+                        setPhoneError("");
+                      }}
+                      disabled={loading}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </Modal>
+            )}
+
           </div>
         </div>
 
@@ -1245,16 +1610,16 @@ The user transcript might contain transcription errors. Use your best judgment t
 
           {/* Info */}
           <div className="flex-1 text-gray-800 space-y-2 text-lg md:text-xl">
-            <p><strong className="text-[#6524EB]">Name:</strong> {agentData?.agentName}</p>
-            <p><strong className="text-[#6524EB]">Gender:</strong>   {agentData?.agentGender
+            <p><strong className="text-[]">Name:</strong> {agentData?.agentName}</p>
+            <p><strong className="text-[]">Gender:</strong>   {agentData?.agentGender
               ? agentData.agentGender.charAt(0).toUpperCase() + agentData.agentGender.slice(1).toLowerCase()
               : "N/A"}
               </p>
-            <p><strong className="text-[#6524EB]">Language:</strong>{languages?.find((lang) => lang?.locale == agentData?.agentLanguage)?.name || agentData?.agentLanguage}</p>
-            <p><strong className="text-[#6524EB]">Voice:</strong> {agentData?.agentVoice?.split('-')[1]}</p>
-            <p><strong className="text-[#6524EB]">Minutes Left:</strong> {Math.floor(agentData?.mins_left / 60)}</p>
+            <p><strong className="text-[]">Language:</strong>{languages?.find((lang) => lang?.locale == agentData?.agentLanguage)?.name || agentData?.agentLanguage}</p>
+            <p><strong className="text-[]">Voice:</strong> {agentData?.agentVoice?.split('-')[1]}</p>
+            <p><strong className="text-[]">Minutes Left:</strong> {Math.floor(agentData?.mins_left / 60)}</p>
             <p>
-              <strong className="text-[#6524EB]">Status:</strong>{" "}
+              <strong className="text-[]">Status:</strong>{" "}
               {agentData.isDeactivated ? (
                 <span className="text-red-500 font-semibold">Deactivated</span>
               ) : (
@@ -1371,7 +1736,7 @@ The user transcript might contain transcription errors. Use your best judgment t
             onValueChange={(v) => {
               const selectedVoice = filteredVoices.find((voice) => voice.voice_id === v);
               setForm({ ...form, voice: v, selectedVoice });
-              console.log('selectedVoice',selectedVoice,v)
+              // console.log('selectedVoice',selectedVoice,v)
             }}
           >
             <SelectTrigger className="w-full">

@@ -45,7 +45,6 @@ const CallTest: React.FC<CallTestProps> = ({
       <img src="/svg/Phone-call.svg" alt="Phone Call" className="w-6 h-6" />
     </div>
   );
-  console.log('isEndingRef.current', isEndingRef.current, isCallActive,callLoading);
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -72,8 +71,8 @@ const CallTest: React.FC<CallTestProps> = ({
           </div>
         </div>
       ) : isCallActive ? (
-        <div className={`${baseDivClasses} bg-red-100`}>
-          <div className={iconTextLayout} onClick={onEndCall}>
+        <div className={`${baseDivClasses} bg-red-100`} onClick={onEndCall}>
+          <div className={iconTextLayout} >
             {phoneIcon}
             <div  className="cursor-pointer">
               <p className="text-red-800 font-semibold">
