@@ -81,6 +81,7 @@ export function UserModal({ isOpen, onClose, onSave, user, isSaving }: UserModal
               id="email"
               type="email"
               value={formData.email}
+              disabled={user}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
             />
             {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email}</p>}
@@ -91,6 +92,7 @@ export function UserModal({ isOpen, onClose, onSave, user, isSaving }: UserModal
               id="contactNumber"
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            
             />
             {errors.phone && <p className="text-sm text-red-600 mt-1">{errors.phone}</p>}
           </div>
