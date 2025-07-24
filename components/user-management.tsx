@@ -218,7 +218,9 @@ const paginatedUsers = sortedUsers.slice(startIndex, startIndex + usersPerPage);
           name: name || "",
           email,
           phone: phone || "",
-          role: finalPayload.role ?? null
+          role: finalPayload.role ?? null,
+          
+
         };
 
         if (editingUser) {

@@ -193,7 +193,7 @@ const totalPages = Math.ceil(tickets.length / ticketsPerPage);
             ))}
           </TableBody>
         </Table>
-            <div className="flex items-center justify-between mt-6">
+            <div className="flex items-center justify-between mt-6" style={{margin: "18px 4px 5px 4px"}}>
             <div className="text-sm text-gray-600">
                 Showing {indexOfFirstTicket + 1} to{" "}
                 {Math.min(indexOfLastTicket, tickets.length)} of {tickets.length} tickets
