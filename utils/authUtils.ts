@@ -19,3 +19,4 @@ export const isPartner =async (token: string): boolean => {
   const decoded = await decodeToken(token);
   return decoded?.role == '2' || decoded?.role == '3';
 };
+// 
