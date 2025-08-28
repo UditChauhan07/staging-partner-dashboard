@@ -71,11 +71,11 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
 
   const [loading, setLoading] = useState(false);
   const [loaders, setLoaders] = useState(false);
-  
-const [statusFilter, setStatusFilter] = useState("All");
-const [planFilter, setPlanFilter] = useState("All");
-const [sortField, setSortField] = useState("");
-const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
+
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [planFilter, setPlanFilter] = useState("All");
+  const [sortField, setSortField] = useState("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
 
   console.log(selectedAgent, "selectedAgent");
 
@@ -102,7 +102,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
         name: u.name ?? "N/A",
         email: u.email ?? "No Email",
         phone: u.phone ?? "N/A",
-        referredBy:u.referredBy??"N/A"
+        referredBy: u.referredBy ?? "N/A",
       }));
       console.log(mappedUsers, "mappedUsers");
       setuserList(mappedUsers);
@@ -154,39 +154,38 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
   }, []);
 
   const agentsPerPage = 10;
- const filteredAgents = agentData
-  .filter((row) => {
-    const name = row.agentName || "";
-    const business = row?.businessName || "";
-    const user = row.userName || "";
-    const email = row.userEmail || "";
+  const filteredAgents = agentData
+    .filter((row) => {
+      const name = row.agentName || "";
+      const business = row?.businessName || "";
+      const user = row.userName || "";
+      const email = row.userEmail || "";
 
-    const matchesSearch =
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      business.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch =
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        business.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase());
 
-    const matchesStatus =
-      statusFilter === "All" ||
-      (statusFilter === "Active" && row.status === 1) ||
-      (statusFilter === "Inactive" && row.status !== 1);
+      const matchesStatus =
+        statusFilter === "All" ||
+        (statusFilter === "Active" && row.status === 1) ||
+        (statusFilter === "Inactive" && row.status !== 1);
 
-    const matchesPlan = planFilter === "All" || row.agentPlan === planFilter;
+      const matchesPlan = planFilter === "All" || row.agentPlan === planFilter;
 
-    return matchesSearch && matchesStatus && matchesPlan;
-  })
-  .sort((a, b) => {
-    if (!sortField) return 0;
+      return matchesSearch && matchesStatus && matchesPlan;
+    })
+    .sort((a, b) => {
+      if (!sortField) return 0;
 
-    const valA = (a as any)[sortField] || "";
-    const valB = (b as any)[sortField] || "";
+      const valA = (a as any)[sortField] || "";
+      const valB = (b as any)[sortField] || "";
 
-    if (valA < valB) return sortOrder === "asc" ? -1 : 1;
-    if (valA > valB) return sortOrder === "asc" ? 1 : -1;
-    return 0;
-  });
-
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
 
   const totalPages = Math.ceil(filteredAgents.length / agentsPerPage);
   const startIndex = (currentPage - 1) * agentsPerPage;
@@ -194,7 +193,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
     startIndex,
     startIndex + agentsPerPage
   );
-  console.log(paginatedAgents)
+  console.log(paginatedAgents);
   const handleDeleteClick = (agent: AgentBusinessRow) => {
     setSelectedAgent(agent);
     setShowConfirm(true);
@@ -281,7 +280,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
             timer: 1500,
             showConfirmButton: false,
           });
-        } 
+        }
       } catch (err) {
         console.error("Error deactivating agent:", err);
         setLoading(false);
@@ -368,75 +367,75 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
           <div className="flex justify-between items-center">
             <CardTitle>All Agents</CardTitle>
 
-          
             <div className="flex gap-4 mt-4">
-  <div>
-    <label className="text-sm text-gray-600">Status &nbsp;</label>
-    <select
-      value={statusFilter}
-      onChange={(e) => setStatusFilter(e.target.value)}
-      className="mt-1 border rounded px-2 py-1 text-sm"
-    >
-      <option value="All">All</option>
-      <option value="Active">Active</option>
-      <option value="Inactive">Inactive</option>
-    </select>
-  </div>
+              <div>
+                <label className="text-sm text-gray-600">Status &nbsp;</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="mt-1 border rounded px-2 py-1 text-sm"
+                >
+                  <option value="All">All</option>
+                  <option value="Active">Active</option>
+                  <option value="Inactive">Inactive</option>
+                </select>
+              </div>
 
-  <div>
-    <label className="text-sm text-gray-600">Plan &nbsp;</label>
-    <select
-      value={planFilter}
-      onChange={(e) => setPlanFilter(e.target.value)}
-      className="mt-1 border rounded px-2 py-1 text-sm"
-    >
-      <option value="All">All</option>
-      {[...new Set(agentData.map((a) => a.agentPlan))].map((plan) => (
-        <option key={plan} value={plan}>
-          {plan}
-        </option>
-      ))}
-    </select>
-  </div>
+              <div>
+                <label className="text-sm text-gray-600">Plan &nbsp;</label>
+                <select
+                  value={planFilter}
+                  onChange={(e) => setPlanFilter(e.target.value)}
+                  className="mt-1 border rounded px-2 py-1 text-sm"
+                >
+                  <option value="All">All</option>
+                  {[...new Set(agentData.map((a) => a.agentPlan))].map(
+                    (plan) => (
+                      <option key={plan} value={plan}>
+                        {plan}
+                      </option>
+                    )
+                  )}
+                </select>
+              </div>
 
-  <div>
-    <label className="text-sm text-gray-600">Sort By &nbsp;</label>
-    <select
-      value={sortField}
-      onChange={(e) => setSortField(e.target.value)}
-      className="mt-1 border rounded px-2 py-1 text-sm"
-    >
-      <option value="">None</option>
-      <option value="agentName">Agent Name</option>
-      <option value="userName">User Name</option>
-      <option value="agentPlan">Plan</option>
-    </select>
-  </div>
+              <div>
+                <label className="text-sm text-gray-600">Sort By &nbsp;</label>
+                <select
+                  value={sortField}
+                  onChange={(e) => setSortField(e.target.value)}
+                  className="mt-1 border rounded px-2 py-1 text-sm"
+                >
+                  <option value="">None</option>
+                  <option value="agentName">Agent Name</option>
+                  <option value="userName">User Name</option>
+                  <option value="agentPlan">Plan</option>
+                </select>
+              </div>
 
-  {sortField && (
-    <div className="flex items-end">
-      <Button
-        size="sm"
-        variant="outline"
-        onClick={() =>
-          setSortOrder((prev) => (prev === "asc" ? "dsc" : "asc"))
-        }
-      >
-        {sortOrder === "asc" ? "↑ ASC" : "↓ DSC"}
-      </Button>
-    </div>
-  )}
-    <div className="relative w-30">
-              {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400  w-4" /> */}
-              <Input
-                placeholder="Search agents or businesses..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="block border rounded px-2 py-1 text-sm h-8" 
-              />
+              {sortField && (
+                <div className="flex items-end">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      setSortOrder((prev) => (prev === "asc" ? "dsc" : "asc"))
+                    }
+                  >
+                    {sortOrder === "asc" ? "↑ ASC" : "↓ DSC"}
+                  </Button>
+                </div>
+              )}
+              <div className="relative w-30">
+                {/* <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400  w-4" /> */}
+                <Input
+                  placeholder="Search agents or businesses..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="block border rounded px-2 py-1 text-sm h-8"
+                />
+              </div>
             </div>
-</div>
-
           </div>
         </CardHeader>
         <CardContent>
@@ -500,9 +499,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
                       key={row.agentId}
                       className="border-b border-gray-100 hover:bg-gray-50"
                     >
-                      <td className="py-3 px-4 text-gray-600">
-                        {row.agentId}
-                      </td>
+                      <td className="py-3 px-4 text-gray-600">{row.agentId}</td>
                       <td className="py-3 px-4 text-gray-600">
                         {row.userName}
                       </td>
@@ -537,7 +534,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
                           <Eye className="h-4 w-4" />
                         </Button>
                       </td> */}
-                      <td>
+                      {/* <td>
                         <Button
                           size="sm"
                           variant="outline"
@@ -546,7 +543,7 @@ const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                      </td>
+                      </td> */}
                     </tr>
                   ))
                 )}
