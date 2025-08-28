@@ -383,8 +383,8 @@ useEffect(() => {
   console.error("Password update error:", err);
 
   const errorMessage =
-    err?.response?.data?.error || // 👈 catch "Old password does not match"
-    err?.response?.data?.message || // optional fallback
+    err?.response?.data?.error ||
+    err?.response?.data?.message || 
     "Something went wrong";
 
   Swal.fire("Error", errorMessage, "error");

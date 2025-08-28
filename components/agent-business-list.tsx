@@ -323,7 +323,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
     return (
       <div
         style={{
-          position: "fixed", // ✅ overlay entire screen
+          position: "fixed",
           top: 0,
           left: 0,
           height: "100vh",
@@ -465,9 +465,9 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                     {" "}
                     Plan
                   </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                  {/* <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Actions
-                  </th>
+                  </th> */}
                 </tr>
               </thead>
               <tbody>
