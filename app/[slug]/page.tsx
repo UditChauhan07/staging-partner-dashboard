@@ -560,6 +560,6 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
 export default function Page() {
   const params = useParams();
   const slug = params.slug as string;
-
+  // 
   return <RexptLandingPage slug={slug} />;
 }
