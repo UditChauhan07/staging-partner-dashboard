@@ -1,0 +1,990 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 0, 0, 36%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1111;
+  padding: 1rem;
+}
+
+.backbtn {
+  color: black;
+}
+
+.confettiFadeOut {
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.featuresListExpanded {
+  max-height: 100px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.featuresListExpanded::-webkit-scrollbar {
+  width: 6px;
+}
+
+.featuresListExpanded::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.featuresListExpanded::-webkit-scrollbar-thumb {
+  background: #6524eb;
+  border-radius: 3px;
+}
+
+.featuresListExpanded::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+@media (min-width: 640px) {
+  .modalOverlay {
+    padding: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .modalOverlay {
+    padding: 2rem;
+  }
+}
+
+.modalContainer {
+  background-color: white;
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 800px;
+  max-height: 90vh;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  padding-bottom: 1rem;
+  flex-shrink: 0;
+  background-color: white;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.backButton {
+  padding: 0.25rem;
+  border-radius: 0.5rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.backButton:hover {
+  background-color: #f3f4f6;
+}
+
+.headerTitle {
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.trialBadge {
+  background-color: #6524eb !important;
+  color: white !important;
+  padding: 0.25rem 0.75rem !important;
+}
+
+.titleSection {
+  text-align: center;
+  padding: 0 1.5rem 1.5rem;
+  flex-shrink: 0;
+  background-color: white;
+}
+
+.mainTitle {
+  font-size: 1.875rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+}
+
+@media (min-width: 1024px) {
+  .mainTitle {
+    font-size: 2.25rem;
+  }
+}
+
+.subtitle {
+  color: #4b5563;
+  margin: 0;
+}
+
+.scrollableContent {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0;
+}
+
+.scrollableContent::-webkit-scrollbar {
+  width: 3px;
+}
+
+.scrollableContent::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollableContent::-webkit-scrollbar-thumb {
+  background-color: #6524EB;
+  border-radius: 4px;
+}
+
+.planCardContainer {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.planCardBlue {
+  background: #d5f0ff;
+  border: 1px solid #00a4ff;
+  border-radius: 20px;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+.planCardGreen {
+  background: #dcffe1;
+  border: 1px solid #22c95c;
+  padding: 10px;
+  border-radius: 20px;
+  margin-top: 10px;
+}
+
+.planCardPink {
+  background: #ffd7f1;
+  border: 1px solid #e83bac;
+  padding: 10px;
+  border-radius: 20px;
+  margin-top: 10px;
+}
+
+.planCardOrange {
+  background: #ffeadf;
+  border: 1px solid #fe5e00;
+  border-radius: 20px;
+  margin-top: 10px;
+  padding: 10px;
+}
+
+@media (min-width: 1024px) {
+  .planCard {
+    padding: 1rem;
+  }
+}
+
+.priceSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.iconContainer {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.priceText {
+  font-size: 22px;
+  font-weight: 600;
+  word-break: break-all;
+}
+
+.billingText {
+  font-size: 14px;
+  color: #24252C;
+  margin-top: 5px;
+}
+
+.billingText2 {
+  font-size: 9px;
+  color: #24252C;
+  margin-top: 5px;
+
+}
+
+.planTitle {
+  font-weight: 700;
+  color: #1f2937;
+  margin-top: 0;
+  font-size: 2rem;
+  text-transform: uppercase;
+}
+
+.planPrice {
+  font-size: 1.125rem;
+  margin-bottom: 0.5rem;
+}
+
+.planDescription {
+  color: #4b5563;
+  margin-bottom: 5px;
+  margin-top: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.featuresList {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  transition: max-height 0.3s ease;
+}
+
+.featureItem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.featureIcon {
+  width: 1.25rem;
+  height: 1.25rem;
+  background-color: #00a4ff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.planCardGreen .featureIcon {
+  background-color: #22c95c;
+}
+
+.planCardPink .featureIcon {
+  background-color: #e83bac;
+}
+
+.planCardOrange .featureIcon {
+  background-color: #fe5e00;
+}
+
+.featureText {
+  color: #374151;
+}
+
+.seeAllButton {
+  color: #9333ea;
+  font-size: 0.875rem;
+  margin-bottom: 1.5rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.seeAllButton:hover {
+  text-decoration: underline;
+}
+
+.billingToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.toggleLabel {
+  font-size: 0.875rem;
+}
+
+.toggleLabelActive {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.toggleLabelInactive {
+  color: #6b7280;
+}
+
+.switch {
+  --primary: #9333ea !important;
+}
+
+.subscribeButton {
+  width: 100% !important;
+  background: linear-gradient(to right, #9333ea, #7c3aed) !important;
+  color: white !important;
+  padding: 0.75rem !important;
+  border-radius: 0.75rem !important;
+  font-size: 1rem !important;
+  font-weight: 600 !important;
+  border: none !important;
+}
+
+.subscribeButton:hover {
+  background: linear-gradient(to right, #7c3aed, #6d28d9) !important;
+}
+
+.planSelection {
+  padding: 1rem;
+  flex-shrink: 0;
+  background-color: white;
+  border-top: 1px solid #f3f4f6;
+}
+
+.planOptions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (min-width: 1024px) {
+  .planOptions {
+    gap: 3rem;
+  }
+}
+
+.planOption {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+}
+
+.radioContainer {
+  margin-bottom: 0.1rem;
+  left: 28px;
+  position: relative;
+}
+
+.radioButton {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 2px solid;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.radioButtonActive {
+  background-color: #9333ea;
+  border-color: #9333ea;
+}
+
+.radioButtonInactive {
+  border-color: #d1d5db;
+  background-color: white;
+}
+
+.radioButtonDot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: white;
+  border-radius: 50%;
+}
+
+.planIconContainer {
+  border-radius: 50%;
+  margin-bottom: 0.5rem;
+}
+
+.planIcon {
+  transition: color 0.2s;
+}
+
+.planIconActive {
+  color: #9333ea;
+}
+
+.planIconBlue {
+  color: #3b82f6;
+}
+
+.planIconGreen {
+  color: #10b981;
+}
+
+.planIconPink {
+  color: #ec4899;
+}
+
+.planIconOrange {
+  color: #f97316;
+}
+
+.planInfo {
+  text-align: center;
+}
+
+.planName {
+  font-weight: 600;
+  margin-bottom: 0;
+  line-height: normal;
+}
+
+.planNameActive {
+  color: #00a4ff;
+}
+
+.planNameInactive {
+  color: #374151;
+}
+
+.planPriceSmall {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.billingToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.toggleLabel {
+  font-size: 14px;
+  color: #888;
+  font-weight: 500;
+  transition: all 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.active {
+  color: #111;
+  font-weight: 600;
+}
+
+.switch {
+  background-color: #d1d5db;
+  border-radius: 9999px;
+  padding: 2px;
+  width: 42px;
+  height: 22px;
+  position: relative;
+}
+
+.switch[data-state="checked"] {
+  background-color: #6524eb;
+}
+
+.switch>span {
+  display: block;
+  width: 18px;
+  height: 18px;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease-in-out;
+  transform: translateX(0);
+}
+
+.switch[data-state="checked"]>span {
+  transform: translateX(20px);
+}
+
+.inactiveButton {
+  background-color: #007bff;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.planOptionActiveBlue .planInfo .planNameActive,
+.planOptionActiveBlue .planInfo .planPriceSmall {
+  color: #00a4ff;
+}
+
+.planOptionActiveGreen .planInfo .planNameActive,
+.planOptionActiveGreen .planInfo .planPriceSmall {
+  color: #22c95c;
+}
+
+.planOptionActiveOrange .planInfo .planNameActive,
+.planOptionActiveOrange .planInfo .planPriceSmall {
+  color: #fe5e00;
+}
+
+.planOptionActivePink .planInfo .planNameActive,
+.planOptionActivePink .planInfo .planPriceSmall {
+  color: #e83bac;
+}
+
+.TopPlansOffer {
+  display: flex;
+  position: relative;
+}
+
+.LaunchOffer {
+  position: absolute;
+  right: 0;
+  display: grid;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.LaunchOffer p {
+  color: #000000;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.LaunchOffer img {
+  position: relative;
+}
+
+.LaunchOffer h1 {
+  position: absolute;
+  top: 41%;
+  left: 17%;
+  font-size: 60px;
+  font-weight: bolder;
+  font-family: 'Anton', sans-serif;
+}
+
+.LaunchOffer span {
+  font-size: 30px;
+  font-weight: bolder;
+
+}
+
+.patakaPopup {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 20px;
+  padding: 40px 30px;
+  max-width: 400px;
+  width: 90%;
+  position: relative;
+  box-shadow: 0px 0px 50px rgba(0, 0, 0, 0.3);
+  animation: patakaSlideIn 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: #6524eb;
+  border: 8px solid #fff;
+}
+
+.patakaCloseButton {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  width: 35px;
+  height: 35px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.2s;
+  z-index: 10;
+}
+
+.patakaCloseButton:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.patakaContent {
+  text-align: center;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.patakaIconContainer {
+  position: relative;
+  margin-bottom: 25px;
+  display: flex;
+  justify-content: center;
+}
+
+.patakaIcon {
+  width: 80px;
+  height: 80px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: bounce 2s infinite;
+  backdrop-filter: blur(10px);
+}
+
+.sparkles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.sparkles svg {
+  position: absolute;
+  animation: sparkle 1.5s infinite;
+}
+
+.sparkles svg:nth-child(1) {
+  top: 10px;
+  right: 10px;
+  animation-delay: 0s;
+}
+
+.sparkles svg:nth-child(2) {
+  bottom: 15px;
+  left: 15px;
+  animation-delay: 0.5s;
+}
+
+.sparkles svg:nth-child(3) {
+  top: 50%;
+  right: -10px;
+  animation-delay: 1s;
+}
+
+.patakaText {
+  color: white;
+}
+
+.patakaTitle {
+  font-size: 38px;
+  font-weight: 800;
+  margin: 0 0 10px 0;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  animation: glow 2s ease-in-out infinite alternate;
+}
+
+.patakaSubtitle {
+  font-size: 16px;
+  margin: 0 0 5px 0;
+  opacity: 0.9;
+}
+
+.patakaDiscount {
+  font-size: 48px;
+  font-weight: 900;
+  color: #ffd700;
+  margin: 10px 0;
+  text-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
+  animation: pulse 1.5s infinite;
+}
+
+.patakaDescription {
+  font-size: 16px;
+  margin: 15px 0 0 0;
+  opacity: 0.9;
+  line-height: 1.4;
+}
+
+.patakaConfetti {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.confetti {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: #ffd700;
+  animation: confettiFall 3s infinite linear;
+}
+
+.confetti:nth-child(1) {
+  left: 10%;
+  animation-delay: 0s;
+  background: #ff6b6b;
+}
+
+.confetti:nth-child(2) {
+  left: 30%;
+  animation-delay: 0.5s;
+  background: #4ecdc4;
+}
+
+.confetti:nth-child(3) {
+  left: 50%;
+  animation-delay: 1s;
+  background: #45b7d1;
+}
+
+.confetti:nth-child(4) {
+  left: 70%;
+  animation-delay: 1.5s;
+  background: #f9ca24;
+}
+
+.confetti:nth-child(5) {
+  left: 90%;
+  animation-delay: 2s;
+  background: #6c5ce7;
+}
+
+.patakaOverlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1111;
+  padding: 1rem;
+}
+
+@media (min-width: 640px) {
+  .patakaOverlay {
+    padding: 1.5rem;
+  }
+
+  .priceText {
+    line-height: normal;
+    display: flex;
+    align-items: center;
+  }
+
+
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes patakaSlideIn {
+  from {
+    transform: scale(0.5) translateY(-50px);
+    opacity: 0;
+  }
+
+  to {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes bounce {
+
+  0%,
+  20%,
+  50%,
+  80%,
+  100% {
+    transform: translateY(0);
+  }
+
+  40% {
+    transform: translateY(-10px);
+  }
+
+  60% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes sparkle {
+
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes glow {
+  from {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  to {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 20px rgba(255, 255, 255, 0.5);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.05);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+@keyframes confettiFall {
+  0% {
+    transform: translateY(-100vh) rotate(0deg);
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(360deg);
+    opacity: 0;
+  }
+}
+
+@media (max-width: 600px) {
+  .TopPlansOffer {
+    flex-direction: column-reverse;
+  }
+
+  .LaunchOffer {
+    position: relative;
+    right: 0;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+  }
+
+  .LaunchOffer img {
+    width: 60%;
+  }
+
+  .LaunchOffer h1 {
+    top: 48%;
+    left: 13%;
+    font-size: 40px;
+
+  }
+
+  .LaunchOffer span {
+    font-size: 20px;
+  }
+
+  .featuresList {
+    display: none;
+  }
+
+  .seeAllButton {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .patakaPopup {
+    padding: 30px 20px;
+    margin: 20px;
+  }
+
+  .patakaTitle {
+    font-size: 24px;
+  }
+
+  .patakaDiscount {
+    font-size: 36px;
+  }
+
+  .patakaIcon {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+.speacial {
+  font-weight: 300 !important;
+}
+
+@media (min-width: 1024px) and (max-width: 1440px) {
+  .header {
+    padding: 10px;
+  }
+
+  .planTitle {
+    font-size: 28px;
+  }
+
+  .featuresList {
+    gap: 5px;
+  }
+
+  .seeAllButton {
+    margin-bottom: 5px;
+  }
+
+  .planSelection {
+    padding-inline: 10px;
+    padding-block: 5px;
+  }
+}
+
+@media (max-width: 370px) {
+  .planName {
+    font-size: 14px;
+  }
+
+  .planPriceSmall {
+    font-size: 12px;
+  }
+
+  .planOption {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 375px) {
+  .subscribeButton {
+    font-size: 14px !important;
+  }
+}
+
+@media (max-width:340px){
+   .LaunchOffer h1 {
+    top: 48%;
+    left: 13%;
+    font-size: 30px;
+
+  }
+
+  .LaunchOffer span {
+    font-size: 16px;
+  }
+}

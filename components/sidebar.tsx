@@ -13,11 +13,11 @@ interface SidebarProps {
 
 const navigationItems = [
   {id:"analytics",label:"Dashboard",icon:Grid2x2Check},
-  { id: "users", label: "User Management", icon: Users },
+  { id: "users", label: "Customer Management", icon: Users },
   { id: "agents", label: "Agent Business List", icon: Headphones },
   
   {id:"EarningsTable", label:"Partner Earnings",icon:CoinsIcon },
-  { id: "referral", label: "Partner Referral Link", icon: Link2 },
+  { id: "referral", label: "Marketing Material", icon: Link2 },
   {id:"Ownagent",label:"Partner agent",icon:UserCheck2},
   {id:"ProfileDetails",label:"Profile Details",icon:Shield},
   {id:"RaiseTickets",label:"Raise Ticket",icon:Tickets},
