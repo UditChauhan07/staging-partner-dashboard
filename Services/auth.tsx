@@ -222,6 +222,15 @@ export const raiseagentRequest = async (payload: {
     return { status: false, error: err };
   }
 };
+export const getAllRaiseUserRequest = async () => {
+  try {
+    const res = await axios.get(`${URL}/api/endusers/getallrequest`);
+    return res.data;
+  } catch (err) {
+    console.error("Error raising request:", err);
+    return { status: false, error: err };
+  }
+};
 // export const deleteAgent = async (agentId) => {
 //   try {
 //     const res = await axios.delete(`/agent/deleteAgent/${agentId}`, {
