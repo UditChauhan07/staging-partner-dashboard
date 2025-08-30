@@ -16,10 +16,15 @@ import {
 } from "lucide-react";
 import { UserModal } from "./user-modal";
 import { DeleteConfirmModal } from "./delete-confirm-modal";
-import { retrieveAllRegisteredUsers, deleteUser } from "@/Services/auth";
+import {
+  retrieveAllRegisteredUsers,
+  deleteUser,
+  raiseRequest,
+} from "@/Services/auth";
 import Swal from "sweetalert2";
 import { addUser } from "@/Services/auth";
 import { FadeLoader } from "react-spinners";
+import { RaiseRequestModal } from "./raiserequest";
 
 interface User {
   id: string;
@@ -291,6 +296,50 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
     setEditingUser(null);
   };
 
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+  const [selectedUserEmail, setSelectedUserEmail] = useState<string | null>(
+    null
+  );
+  console.log(selectedUserEmail, "email");
+
+  const handleRaiseRequest = (userId: string, email: string) => {
+    setSelectedUserId(userId);
+    setSelectedUserEmail(email);
+    setIsRequestModalOpen(true);
+  };
+
+  const handleRequestSubmit = async (
+    comment: string,
+    userId: string,
+    email: string
+  ) => {
+    try {
+      const res = await raiseRequest({ userId, email, comment });
+      if (res?.status === true) {
+        Swal.fire({
+          icon: "success",
+          title: "Request Raised",
+          text: "Your request has been submitted successfully.",
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Failed",
+          text: "Failed to raise request.",
+        });
+      }
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Something went wrong while submitting request.",
+      });
+    }
+  };
+
   // const getStatusBadge = (status: User["status"]) => {
   //   const variants = {
   //     Active: "bg-green-100 text-green-800",
@@ -449,6 +498,23 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   <Trash2 className="h-4 w-4" />
                                 )}
                               </Button> */}
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="text-blue-600 hover:text-blue-700"
+                                onClick={() =>
+                                  handleRaiseRequest(user.id, user.email)
+                                }
+                              >
+                                Raise Request
+                              </Button>
+                              <RaiseRequestModal
+                                isOpen={isRequestModalOpen}
+                                onClose={() => setIsRequestModalOpen(false)}
+                                userId={selectedUserId}
+                                email={selectedUserEmail}
+                                onSubmit={handleRequestSubmit}
+                              />
                             </div>
                           </td>
                         </tr>

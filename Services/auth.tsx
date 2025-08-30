@@ -194,6 +194,34 @@ export const updateAgent = async (agentId, updateData) => {
     console.error("Error while adding assign number at db", error);
   }
 };
+//raise request
+export const raiseRequest = async (payload: {
+  userId: string;
+  email: string;
+  comment: string;
+}) => {
+  try {
+    const res = await axios.post(`${URL}/api/endusers/raiserequest`, payload);
+    return res.data;
+  } catch (err) {
+    console.error("Error raising request:", err);
+    return { status: false, error: err };
+  }
+};
+
+export const raiseagentRequest = async (payload: {
+  agentId: string;
+  email: string;
+  comment: string;
+}) => {
+  try {
+    const res = await axios.post(`${URL}/api/agent/raiseagentrequest`, payload);
+    return res.data;
+  } catch (err) {
+    console.error("Error raising request:", err);
+    return { status: false, error: err };
+  }
+};
 // export const deleteAgent = async (agentId) => {
 //   try {
 //     const res = await axios.delete(`/agent/deleteAgent/${agentId}`, {
