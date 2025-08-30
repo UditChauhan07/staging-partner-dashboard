@@ -17,6 +17,7 @@ import {
   deleteAgent,
   deactivateAgent,
   fetchAgentDetailById,
+  raiseagentRequest,
 } from "@/Services/auth";
 import {
   Dialog,
@@ -29,6 +30,7 @@ import Swal from "sweetalert2";
 import AddAgentModal from "./Agentdetial";
 import { retrieveAllRegisteredUsers } from "@/Services/auth";
 import { FadeLoader } from "react-spinners";
+import { RaiseAgentRequest } from "./raiseagentrequest";
 
 interface User {
   id: string;
@@ -297,6 +299,44 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
     }
   };
 
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedAgentEmail, setSelectedAgentEmail] = useState<string | null>(
+    null
+  );
+  const handleOpenRaiseRequest = (agent: AgentBusinessRow) => {
+    setSelectedAgentId(agent.agentId);
+    setSelectedAgentEmail(agent.userEmail);
+    setIsRequestModalOpen(true);
+  };
+
+  const handleRaiseRequestSubmit = async (
+    comment: string,
+    agentId: string,
+    email: string
+  ) => {
+    try {
+      console.log("Request Data:", { comment, agentId, email });
+
+      const res = await raiseagentRequest({ agentId, email, comment });
+
+      if (res.status) {
+        await Swal.fire({
+          icon: "success",
+          title: "Request Raised",
+          text: `Request for "${agentId}" has been raised successfully.`,
+          timer: 1500,
+          showConfirmButton: false,
+        });
+      } else {
+        throw new Error(res.error || "Something went wrong");
+      }
+    } catch (error) {
+      console.error("Error raising request:", error);
+      Swal.fire("Error", "Failed to raise request", "error");
+    }
+  };
+
   const handleAgentClick = async (row: AgentBusinessRow) => {
     try {
       setLoading(true);
@@ -544,6 +584,28 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td> */}
+                      <td>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-blue-600 hover:text-blue-700"
+                          onClick={() => {
+                            setSelectedAgentId(row.agentId);
+                            setSelectedAgentEmail(row.userEmail);
+                            setIsRequestModalOpen(true);
+                          }}
+                        >
+                          Raise Request
+                        </Button>
+                      </td>
+
+                      <RaiseAgentRequest
+                        isOpen={isRequestModalOpen}
+                        onClose={() => setIsRequestModalOpen(false)}
+                        agentId={selectedAgentId}
+                        email={selectedAgentEmail}
+                        onSubmit={handleRaiseRequestSubmit}
+                      />
                     </tr>
                   ))
                 )}
