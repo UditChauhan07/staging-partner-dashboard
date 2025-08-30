@@ -302,7 +302,14 @@ import { QRCodeCanvas } from "qrcode.react";
 import { Switch as UiSwitch } from "@/components/ui/switch";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-
+import axios from "axios";
+// -----------------------------
+interface PartnerDetails {
+  name: string;
+  email: string;
+  phone: string;
+  referalName: string;
+}
 export function ReferralLink() {
   const [fullLink, setFullLink] = useState("");
   const [partnerWebsite, setPartnerWebsite] = useState("");
@@ -311,16 +318,45 @@ export function ReferralLink() {
   const [isFreeSignup, setIsFreeSignup] = useState(false);
   const [websiteTitle, setWebsiteTitle] = useState("My Partner Website");
   const [websiteImage, setWebsiteImage] = useState("https://placehold.co/600x400");
+  const [phone, setPhone] = useState("https://placehold.co/600x400");
   const [mode, setMode] = useState("preview"); // 'preview' or 'edit'
   const [activeTab, setActiveTab] = useState("referralLink"); // Active tab state
   const [showPreview, setShowPreview] = useState(false); // State to toggle iframe preview
-
+  const referalName=localStorage.getItem("referralName");
+    console.log(referalName)
   useEffect(() => {
-    setReferralCode("VC32ZZ");
-    setReferralName("Test");
-    setFullLink(`https://refer.rxpt.us/Test`);
-    setPartnerWebsite(`http://localhost:4001/Ajaypartners`);
-  }, []);
+    const fetchPartnerDetails = async (slug: string) => {
+          console.log(referalName)
+
+        try {
+          const res = await axios.get(
+            `${process.env.NEXT_PUBLIC_API_URL}/api/endusers/getPartnerDetailbyReferalName/${slug}`
+          );
+          console.log(res)
+            if (res.status === 200) {
+              console.log("✅ Partner details fetched:", res.data);
+              // setPARTNER_EMAIL(res.data.email);
+              setPhone(res.data.phone);
+          setReferralName("Test");
+          const code = res.data.referalCode||localStorage.getItem("referralCode") || "";
+          const name = res.data.referalName||localStorage.getItem("referralName") || "";
+          const phone = res.data.phone|| "NA";
+          setReferralName(name);
+          setFullLink(`https://refer.rxpt.us/${name}`);
+          // setPartnerWebsite(`http://localhost:4001/Ajaypartners`);
+          setPartnerWebsite(`${window.location.origin}/${name}`);
+          setReferralCode(code);
+          setPhone(phone)
+            }
+          }catch(err){
+            console.log('an error occured while fetching partner details',err)
+          }
+        }
+        if(referalName){
+             fetchPartnerDetails(referalName)
+        }
+ 
+  }, [referalName]);
 
   const copyToClipboard = async (text) => {
     if (!text) return;
@@ -432,7 +468,8 @@ export function ReferralLink() {
               <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">
                 Partner Website URL
               </h3>
-              <div className="flex gap-3" >
+              <div className="flex gap-3" style={{justifyContent: "center",
+    alignItems: "center"}}>
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -480,7 +517,7 @@ export function ReferralLink() {
               </h3>
               <div
                 id="business-card"
-                className="relative border border-gray-300 p-4 rounded-lg mx-auto max-w-sm bg-white shadow-md"
+                className="relative border border-gray-300 p-4 rounded-lg mx-auto max-w-md bg-white shadow-md"
                 style={{
                   background: "linear-gradient(120deg, #ffffff 40%, #ede7f6 70%, #6524EB 100%)",
                 }}
@@ -489,7 +526,7 @@ export function ReferralLink() {
                   <img
                     src="/rexpt-main.png"
                     alt="Icon"
-                    className="w-12 h-12 mr-4 rounded-full"
+                    className="w-12 h-12 mr-4 "
                   />
                   <div>
                     <h2 className="text-xl font-bold">{referralName}</h2>
@@ -501,7 +538,7 @@ export function ReferralLink() {
                     <strong>Referral Code:</strong> {referralCode}
                   </p>
                   <p className="text-sm">
-                    <strong>Phone:</strong> +1 234 567 890
+                    <strong>Phone:</strong> +{phone}
                   </p>
                   <p className="text-sm">
                     <strong>Website:</strong> {partnerWebsite}

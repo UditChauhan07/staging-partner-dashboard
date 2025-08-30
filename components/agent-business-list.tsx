@@ -584,7 +584,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td> */}
-                      <td>
+                      {/* <td>
                         <Button
                           size="sm"
                           variant="outline"
@@ -597,7 +597,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                         >
                           Raise Request
                         </Button>
-                      </td>
+                      </td> */}
 
                       <RaiseAgentRequest
                         isOpen={isRequestModalOpen}

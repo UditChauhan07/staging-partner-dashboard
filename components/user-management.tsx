@@ -498,7 +498,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   <Trash2 className="h-4 w-4" />
                                 )}
                               </Button> */}
-                              <Button
+                              {/* <Button
                                 size="sm"
                                 variant="outline"
                                 className="text-blue-600 hover:text-blue-700"
@@ -507,7 +507,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                 }
                               >
                                 Raise Request
-                              </Button>
+                              </Button> */}
                               <RaiseRequestModal
                                 isOpen={isRequestModalOpen}
                                 onClose={() => setIsRequestModalOpen(false)}
