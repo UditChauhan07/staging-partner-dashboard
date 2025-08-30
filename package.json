@@ -68,6 +68,7 @@
     "react-hot-toast": "^2.6.0",
     "react-phone-input-2": "^2.15.1",
     "react-resizable-panels": "^2.1.7",
+    "react-scroll": "^1.9.3",
     "react-select": "^5.10.1",
     "react-spinners": "^0.17.0",
     "recharts": "latest",

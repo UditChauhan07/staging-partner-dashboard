@@ -319,7 +319,7 @@ export function ReferralLink() {
     setReferralCode("VC32ZZ");
     setReferralName("Test");
     setFullLink(`https://refer.rxpt.us/Test`);
-    setPartnerWebsite(`https://rxpt.us/Test`);
+    setPartnerWebsite(`http://localhost:4001/Ajaypartners`);
   }, []);
 
   const copyToClipboard = async (text) => {
@@ -395,8 +395,8 @@ export function ReferralLink() {
           </div>
 
           {/* Conditional Content Based on Active Tab */}
-          {activeTab === "referralLink" && (
-            <DivideIcon>
+         {activeTab === "referralLink" && (
+            <div>
               <div className="flex gap-3">
                 <div className="relative flex-1">
                   <input
@@ -424,7 +424,7 @@ export function ReferralLink() {
                   <QRCodeCanvas value={fullLink} size={128} />
                 </div>
               </div>
-            </DivideIcon>
+            </div>
           )}
 
           {activeTab === "websiteUrl" && (
@@ -461,7 +461,7 @@ export function ReferralLink() {
                 <div className="mt-4">
                   <div id="website-mock" className="border border-gray-300 p-4 rounded-lg bg-gray-100">
                     <iframe
-                      src="https://dsx-rexptinx-partner-landing-page.vercel.app/"
+                      src="http://localhost:4001/Ajaypartners"
                       title="Website Preview"
                       className="w-full h-auto mb-4 border-none"
                       style={{ minHeight: "400px" }}
