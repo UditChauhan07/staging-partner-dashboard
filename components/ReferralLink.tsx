@@ -498,7 +498,7 @@ export function ReferralLink() {
                 <div className="mt-4">
                   <div id="website-mock" className="border border-gray-300 p-4 rounded-lg bg-gray-100">
                     <iframe
-                      src="http://localhost:4001/Ajaypartners"
+                     src={`${window.location.origin}/${referralName}`}
                       title="Website Preview"
                       className="w-full h-auto mb-4 border-none"
                       style={{ minHeight: "400px" }}
