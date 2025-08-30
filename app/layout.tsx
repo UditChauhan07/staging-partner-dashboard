@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: 'Rexpt',
   description: 'Rexpt',
   icons: {
-    icon: '/rexpt-main.png', 
+    icon: '/favicon.ico', 
   },
 
 }
