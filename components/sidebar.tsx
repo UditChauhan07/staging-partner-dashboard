@@ -13,7 +13,7 @@ interface SidebarProps {
 
 const navigationItems = [
   {id:"analytics",label:"Dashboard",icon:Grid2x2Check},
-  { id: "users", label: "User Management", icon: Users },
+  { id: "users", label: "Customer Management", icon: Users },
   { id: "agents", label: "Agent Business List", icon: Headphones },
   
   {id:"EarningsTable", label:"Partner Earnings",icon:CoinsIcon },
