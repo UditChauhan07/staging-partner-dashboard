@@ -29,7 +29,7 @@ export function RaiseAgentRequest({
 
   const handleSubmit = () => {
     if (comment.trim() && agentId && email) {
-      onSubmit(comment, agentId, email); // ✅ sending agentId + email
+      onSubmit(comment, agentId, email);
       setComment("");
       onClose();
     }

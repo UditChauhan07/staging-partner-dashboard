@@ -231,6 +231,32 @@ export const getAllRaiseUserRequest = async () => {
     return { status: false, error: err };
   }
 };
+// Services/auth.ts
+export const checkUserRequestStatus = async (userId: string) => {
+  try {
+    const res = await fetch(`${URL}/api/endusers/getuserrequest/${userId}`);
+    if (!res.ok) throw new Error("Failed to fetch request status");
+    const data = await res.json();
+    // data is { alreadyRequested: boolean, status: string | null }
+    return data;
+  } catch (err) {
+    console.error("Error in checkUserRequestStatus:", err);
+    return { alreadyRequested: false, status: null }; // fallback
+  }
+};
+export const getAgentRequestStatus = async (agentId: string) => {
+  try {
+    const res = await fetch(`${URL}/api/analytics/getAgentStatus/${agentId}`);
+    if (!res.ok) throw new Error("Failed to fetch request status");
+    const data = await res.json();
+    // data is { alreadyRequested: boolean, status: string | null }
+    return data;
+  } catch (err) {
+    console.error("Error in checkUserRequestStatus:", err);
+    return { alreadyRequested: false, status: null }; // fallback
+  }
+};
+
 // export const deleteAgent = async (agentId) => {
 //   try {
 //     const res = await axios.delete(`/agent/deleteAgent/${agentId}`, {
