@@ -13,7 +13,7 @@ import {
 interface RaiseRequestModalProps {
   isOpen: boolean;
   onClose: () => void;
-  agentId: string | null; // ✅ agentId instead of userId
+  agentId: string | null; 
   email: string | null;
   onSubmit: (comment: string, agentId: string, email: string) => void;
 }
