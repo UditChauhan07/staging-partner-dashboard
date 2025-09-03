@@ -34,9 +34,9 @@
 //         {/* Wider card */}
 //         <div
 //           className="
-//             bg-white rounded-2xl 
+//             bg-white rounded-2xl
 //             p-8
-//             max-w-3xl         
+//             max-w-3xl
 //             w-full
 //           "
 //         >
@@ -81,7 +81,6 @@
 //     </>
 //   );
 // }
-
 
 // import React, { useState, useEffect } from "react";
 // import { Copy } from "lucide-react";
@@ -317,45 +316,47 @@ export function ReferralLink() {
   const [referralCode, setReferralCode] = useState("");
   const [isFreeSignup, setIsFreeSignup] = useState(false);
   const [websiteTitle, setWebsiteTitle] = useState("My Partner Website");
-  const [websiteImage, setWebsiteImage] = useState("https://placehold.co/600x400");
+  const [websiteImage, setWebsiteImage] = useState(
+    "https://placehold.co/600x400"
+  );
   const [phone, setPhone] = useState("https://placehold.co/600x400");
   const [mode, setMode] = useState("preview"); // 'preview' or 'edit'
   const [activeTab, setActiveTab] = useState("referralLink"); // Active tab state
   const [showPreview, setShowPreview] = useState(false); // State to toggle iframe preview
-  const referalName=localStorage.getItem("referralName");
-    console.log(referalName)
+  const referalName = localStorage.getItem("referralName");
+  console.log(referalName);
   useEffect(() => {
     const fetchPartnerDetails = async (slug: string) => {
-          console.log(referalName)
+      console.log(referalName);
 
-        try {
-          const res = await axios.get(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/endusers/getPartnerDetailbyReferalName/${slug}`
-          );
-          console.log(res)
-            if (res.status === 200) {
-              console.log("✅ Partner details fetched:", res.data);
-              // setPARTNER_EMAIL(res.data.email);
-              setPhone(res.data.phone);
-          setReferralName("Test");
-          const code = res.data.referalCode||localStorage.getItem("referralCode") || "";
-          const name = res.data.referalName||localStorage.getItem("referralName") || "";
-          const phone = res.data.phone|| "NA";
+      try {
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/endusers/getPartnerDetailbyReferalName/${slug}`
+        );
+        console.log(res);
+        if (res.status === 200) {
+          console.log("✅ Partner details fetched:", res.data);
+          // setPARTNER_EMAIL(res.data.email);
+          setPhone(res.data.phone);
+          const code =
+            res.data.referalCode || localStorage.getItem("referralCode") || "";
+          const name =
+            res.data.referalName || localStorage.getItem("referralName") || "";
+          const phone = res.data.phone || "NA";
           setReferralName(name);
           setFullLink(`https://refer.rxpt.us/${name}`);
           // setPartnerWebsite(`http://localhost:4001/Ajaypartners`);
           setPartnerWebsite(`${window.location.origin}/${name}`);
           setReferralCode(code);
-          setPhone(phone)
-            }
-          }catch(err){
-            console.log('an error occured while fetching partner details',err)
-          }
+          setPhone(phone);
         }
-        if(referalName){
-             fetchPartnerDetails(referalName)
-        }
- 
+      } catch (err) {
+        console.log("an error occured while fetching partner details", err);
+      }
+    };
+    if (referalName) {
+      fetchPartnerDetails(referalName);
+    }
   }, [referalName]);
 
   const copyToClipboard = async (text) => {
@@ -431,7 +432,7 @@ export function ReferralLink() {
           </div>
 
           {/* Conditional Content Based on Active Tab */}
-         {activeTab === "referralLink" && (
+          {activeTab === "referralLink" && (
             <div>
               <div className="flex gap-3">
                 <div className="relative flex-1">
@@ -468,8 +469,10 @@ export function ReferralLink() {
               <h3 className="text-xl font-semibold text-gray-800 mb-4 text-center">
                 Partner Website URL
               </h3>
-              <div className="flex gap-3" style={{justifyContent: "center",
-    alignItems: "center"}}>
+              <div
+                className="flex gap-3"
+                style={{ justifyContent: "center", alignItems: "center" }}
+              >
                 <div className="relative flex-1">
                   <input
                     type="text"
@@ -482,9 +485,7 @@ export function ReferralLink() {
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer"
                   />
                 </div>
-             
 
-              
                 <Button onClick={() => setShowPreview(!showPreview)}>
                   {showPreview ? "Close Preview" : "Preview Website"}
                 </Button>
@@ -496,9 +497,12 @@ export function ReferralLink() {
 
               {showPreview && (
                 <div className="mt-4">
-                  <div id="website-mock" className="border border-gray-300 p-4 rounded-lg bg-gray-100">
+                  <div
+                    id="website-mock"
+                    className="border border-gray-300 p-4 rounded-lg bg-gray-100"
+                  >
                     <iframe
-                      src="http://localhost:4001/Ajaypartners"
+                      src={`${window.location.origin}/${referralName}`}
                       title="Website Preview"
                       className="w-full h-auto mb-4 border-none"
                       style={{ minHeight: "400px" }}
@@ -519,7 +523,8 @@ export function ReferralLink() {
                 id="business-card"
                 className="relative border border-gray-300 p-4 rounded-lg mx-auto max-w-md bg-white shadow-md"
                 style={{
-                  background: "linear-gradient(120deg, #ffffff 40%, #ede7f6 70%, #6524EB 100%)",
+                  background:
+                    "linear-gradient(120deg, #ffffff 40%, #ede7f6 70%, #6524EB 100%)",
                 }}
               >
                 <div className="flex items-center mb-2">
@@ -552,7 +557,9 @@ export function ReferralLink() {
                 </div>
               </div>
               <div className="flex justify-center mt-4">
-                <Button onClick={downloadBusinessCard}>Download PDF Vector File</Button>
+                <Button onClick={downloadBusinessCard}>
+                  Download PDF Vector File
+                </Button>
               </div>
             </div>
           )}
