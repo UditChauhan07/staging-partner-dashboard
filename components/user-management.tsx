@@ -20,12 +20,19 @@ import {
   retrieveAllRegisteredUsers,
   deleteUser,
   raiseRequest,
+  checkUserRequestStatus,
 } from "@/Services/auth";
 import Swal from "sweetalert2";
 import { addUser } from "@/Services/auth";
 import { FadeLoader } from "react-spinners";
 import { RaiseRequestModal } from "./raiserequest";
 
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 interface User {
   id: string;
   name: string;
@@ -60,6 +67,10 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
     "name-asc" | "name-desc" | "newest" | "oldest"
   >("newest");
 
+  const [requestedUsers, setRequestedUsers] = useState<
+    Map<string, string | null>
+  >(new Map());
+  const [requestingUserId, setRequestingUserId] = useState<string | null>(null);
   const usersPerPage = 20;
   async function fetchUsers() {
     try {
@@ -94,6 +105,27 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   useEffect(() => {
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    const fetchRequestedUsers = async () => {
+      try {
+        const updatedRequestedUsers = new Map<string, string | null>();
+        for (const user of users) {
+          const data = await checkUserRequestStatus(user.id);
+          if (typeof data === "boolean") {
+            if (data) updatedRequestedUsers.set(user.id, "Not Resolved");
+          } else if (data?.alreadyRequested) {
+            updatedRequestedUsers.set(user.id, data.Status || "Not Resolved");
+          }
+        }
+        setRequestedUsers(updatedRequestedUsers);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+    if (users.length) fetchRequestedUsers();
+  }, [users]);
+
   // Filter and paginat
   const currentReferredBy =
     typeof window !== "undefined" ? localStorage.getItem("referralCode") : null;
@@ -315,15 +347,16 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
     email: string
   ) => {
     try {
+      setRequestingUserId(userId);
       const res = await raiseRequest({ userId, email, comment });
-      if (res?.status === true) {
+      if (res?.status) {
         Swal.fire({
           icon: "success",
           title: "Request Raised",
-          text: "Your request has been submitted successfully.",
           timer: 1500,
           showConfirmButton: false,
         });
+        setRequestedUsers((prev) => new Map(prev.set(userId, "Not Resolved")));
       } else {
         Swal.fire({
           icon: "error",
@@ -331,12 +364,14 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
           text: "Failed to raise request.",
         });
       }
-    } catch (err) {
+    } catch {
       Swal.fire({
         icon: "error",
         title: "Error",
-        text: "Something went wrong while submitting request.",
+        text: "Something went wrong.",
       });
+    } finally {
+      setRequestingUserId(null);
     }
   };
 
@@ -450,42 +485,51 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                         </td>
                       </tr>
                     ) : (
-                      paginatedUsers.map((user) => (
-                        <tr
-                          key={user.id}
-                          className="border-b border-gray-100 hover:bg-gray-50"
-                        >
-                          <td className="py-3 px-4 font-mono text-sm">
-                            {user.id}
-                          </td>
-                          <td className="py-3 px-4 font-medium">{user.name}</td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {user.email}
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {user.phone}
-                          </td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {user.referredBy}
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="flex gap-2">
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => onViewUser(user)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
+                      paginatedUsers.map((user) => {
+                        const isRequestDone =
+                          requestedUsers.get(user.id) === "Not Resolved" ||
+                          requestedUsers.get(user.id) === "Resolved" ||
+                          requestingUserId === user.id;
+                        return (
+                          <tr
+                            key={user.id}
+                            className="border-b border-gray-100 hover:bg-gray-50"
+                          >
+                            <td className="py-3 px-4 font-mono text-sm">
+                              {user.id}
+                            </td>
+                            <td className="py-3 px-4 font-medium">
+                              {user.name}
+                            </td>
+                            <td className="py-3 px-4 text-gray-600">
+                              {user.email}
+                            </td>
+                            <td className="py-3 px-4 text-gray-600">
+                              {user.phone}
+                            </td>
+                            <td className="py-3 px-4 text-gray-600">
+                              {user.referredBy}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => onViewUser(user)}
+                                  disabled={isRequestDone}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => handleEditUser(user)}
+                                  disabled={isRequestDone}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
 
-                              {/* <Button
+                                {/* <Button
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleDeleteUser(user)}
@@ -498,7 +542,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   <Trash2 className="h-4 w-4" />
                                 )}
                               </Button> */}
-                              {/* <Button
+                                {/* <Button
                                 size="sm"
                                 variant="outline"
                                 className="text-blue-600 hover:text-blue-700"
@@ -508,17 +552,57 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                               >
                                 Raise Request
                               </Button> */}
-                              <RaiseRequestModal
-                                isOpen={isRequestModalOpen}
-                                onClose={() => setIsRequestModalOpen(false)}
-                                userId={selectedUserId}
-                                email={selectedUserEmail}
-                                onSubmit={handleRequestSubmit}
-                              />
-                            </div>
-                          </td>
-                        </tr>
-                      ))
+
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span>
+                                        <Button
+                                          size="sm"
+                                          variant="outline"
+                                          className="text-blue-600 hover:text-blue-700"
+                                          onClick={() =>
+                                            handleRaiseRequest(
+                                              user.id,
+                                              user.email
+                                            )
+                                          }
+                                          disabled={isRequestDone}
+                                        >
+                                          {requestingUserId === user.id ? (
+                                            <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent animate-spin rounded-full" />
+                                          ) : requestedUsers.get(user.id) ===
+                                            "Not Resolved" ? (
+                                            "Raised"
+                                          ) : requestedUsers.get(user.id) ===
+                                            "Resolved" ? (
+                                            "Resolved"
+                                          ) : (
+                                            "Raise Request"
+                                          )}
+                                        </Button>
+                                      </span>
+                                    </TooltipTrigger>
+                                    {requestedUsers.get(user.id) ===
+                                      "Not Resolved" && (
+                                      <TooltipContent>
+                                        Request already submitted
+                                      </TooltipContent>
+                                    )}
+                                  </Tooltip>
+                                </TooltipProvider>
+                                <RaiseRequestModal
+                                  isOpen={isRequestModalOpen}
+                                  onClose={() => setIsRequestModalOpen(false)}
+                                  userId={selectedUserId}
+                                  email={selectedUserEmail}
+                                  onSubmit={handleRequestSubmit}
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -576,4 +660,4 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
     </div>
   );
 }
-// 
+//
