@@ -165,6 +165,7 @@ import AgentFormSetup from "./components/UrownAgent";
 import { AnalyticsSection } from "./components/analytics-section";
 import EarningsTable from "./components/EarningsTable";
 import RaiseTickets from "./components/RaiseTickets";
+import PartnerResources from "./components/PartnerResources/PartnerResources";
 interface User {
   id: string;
   name: string;
@@ -313,6 +314,8 @@ const handleProfileUpdate = async (formData: FormData) => {
           return<AgentFormSetup/>;
         case "RaiseTickets":
           return<RaiseTickets/>;
+        case "PartnerResources":
+        return <PartnerResources />;
       default:
         return <UserManagement onViewUser={handleViewUser} />;
     }

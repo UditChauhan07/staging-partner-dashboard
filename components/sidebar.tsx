@@ -1,5 +1,5 @@
 "use client"
-import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2, Grid2x2Check, Package, Coins, CoinsIcon ,Tickets} from "lucide-react"
+import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2, Grid2x2Check, Package, Coins, CoinsIcon ,Tickets,TvMinimalPlay} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "recharts"
 
@@ -21,6 +21,8 @@ const navigationItems = [
   {id:"Ownagent",label:"Partner agent",icon:UserCheck2},
   {id:"ProfileDetails",label:"Profile Details",icon:Shield},
   {id:"RaiseTickets",label:"Raise Ticket",icon:Tickets},
+  { id: "PartnerResources", label: "Partner Resources", icon: TvMinimalPlay },
+
 
 ]
 
