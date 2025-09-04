@@ -675,7 +675,19 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                           onClose={() => setIsRequestModalOpen(false)}
                           agentId={selectedAgentId}
                           email={selectedAgentEmail}
-                          onSubmit={handleRaiseRequest} // API call happens after comment is entered
+                          onSubmit={handleRaiseRequest}
+
+
+
+
+
+
+
+
+
+
+
+                          
                         />
                       </tr>
                     );
