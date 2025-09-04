@@ -537,7 +537,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   onClick={() => onViewUser(user)}
                                   disabled={
                                     requestingUserId === user.id ||
-                                    alreadyrequest.some(
+                                    alreadyrequest?.some(
                                       (req) =>
                                         req.userId === user.id &&
                                         (req.Status === "Not Resolved" ||
@@ -553,7 +553,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   onClick={() => handleEditUser(user)}
                                   disabled={
                                     requestingUserId === user.id ||
-                                    alreadyrequest.some(
+                                    alreadyrequest?.some(
                                       (req) =>
                                         req.userId === user.id &&
                                         (req.Status === "Not Resolved" ||
