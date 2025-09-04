@@ -231,7 +231,7 @@ export const getAllRaiseUserRequest = async () => {
     return { status: false, error: err };
   }
 };
-// Services/auth.ts
+
 export const checkUserRequestStatus = async (userId: string) => {
   try {
     const res = await fetch(`${URL}/api/endusers/getuserrequest/${userId}`);
