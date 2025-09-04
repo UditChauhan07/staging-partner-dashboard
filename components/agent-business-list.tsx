@@ -18,6 +18,7 @@ import {
   deactivateAgent,
   fetchAgentDetailById,
   raiseagentRequest,
+  getAgentRequestStatus,
 } from "@/Services/auth";
 import {
   Dialog,
@@ -32,6 +33,12 @@ import { retrieveAllRegisteredUsers } from "@/Services/auth";
 import { FadeLoader } from "react-spinners";
 import { RaiseAgentRequest } from "./raiseagentrequest";
 
+import {
+  TooltipProvider,
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip";
 interface User {
   id: string;
   name: string;
@@ -78,7 +85,18 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
   const [planFilter, setPlanFilter] = useState("All");
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState<"asc" | "dsc">("asc");
-
+  const [requestedAgents, setRequestedAgents] = useState<Map<string, string>>(
+    new Map()
+  );
+  const [requestingAgentId, setRequestingAgentId] = useState<string | null>(
+    null
+  );
+  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
+  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
+  const [selectedAgentEmail, setSelectedAgentEmail] = useState<string | null>(
+    null
+  );
+  const [alreadyrequest, setRequestsalready] = useState([]);
   console.log(selectedAgent, "selectedAgent");
 
   async function fetchUsers() {
@@ -108,7 +126,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
       }));
       console.log(mappedUsers, "mappedUsers");
       setuserList(mappedUsers);
-      setLoaders(true);
+      setLoaders(false);
     } catch (error) {
       console.error("Failed to fetch users", error);
       setLoaders(false);
@@ -116,8 +134,49 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
   }
   useEffect(() => {
     fetchUsers();
+    fetchRequestedAgents();
   }, []);
 
+  /** Fetch requested agent status */
+  // useEffect(() => {
+  //   const fetchRequestedAgents = async () => {
+  //     try {
+  //       const updatedRequestedAgents = new Map<string, string>();
+  //       const promises = agentData.map(async (agent) => {
+  //         const data = await getAgentRequestStatus(agent.agentId);
+  //         if (typeof data === "boolean") {
+  //           if (data) updatedRequestedAgents.set(agent.agentId, "Not Resolved");
+  //         } else if (data?.alreadyRequested) {
+  //           updatedRequestedAgents.set(
+  //             agent.agentId,
+  //             data.Status || "Not Resolved"
+  //           );
+  //         }
+  //       });
+  //       await Promise.all(promises);
+  //       setRequestedAgents(updatedRequestedAgents);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
+
+  //   if (agentData.length) fetchRequestedAgents();
+  // }, [agentData]);
+
+  const fetchRequestedAgents = async () => {
+    try {
+      const requestRaisedby = localStorage.getItem("userId");
+
+      const data = await getAgentRequestStatus(requestRaisedby);
+      console.log("test", data);
+
+      setRequestsalready(data.requests);
+
+      // setRequestedUsers(updatedRequestedUsers);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const fetchData = async () => {
     setLoaders(true);
     const referredBy =
@@ -299,41 +358,45 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
     }
   };
 
-  const [isRequestModalOpen, setIsRequestModalOpen] = useState(false);
-  const [selectedAgentId, setSelectedAgentId] = useState<string | null>(null);
-  const [selectedAgentEmail, setSelectedAgentEmail] = useState<string | null>(
-    null
-  );
   const handleOpenRaiseRequest = (agent: AgentBusinessRow) => {
     setSelectedAgentId(agent.agentId);
     setSelectedAgentEmail(agent.userEmail);
     setIsRequestModalOpen(true);
   };
 
-  const handleRaiseRequestSubmit = async (
+  const handleRaiseRequest = async (
     comment: string,
     agentId: string,
     email: string
   ) => {
+    if (!comment || !agentId || !email) return; // safeguard
     try {
-      console.log("Request Data:", { comment, agentId, email });
-
-      const res = await raiseagentRequest({ agentId, email, comment });
-
+      const requestRaisedby = localStorage.getItem("userId");
+      setRequestingAgentId(agentId);
+      const res = await raiseagentRequest({
+        agentId,
+        email,
+        comment,
+        requestRaisedby,
+      });
       if (res.status) {
-        await Swal.fire({
+        setRequestedAgents(
+          (prev) => new Map(prev.set(agentId, "Not Resolved"))
+        );
+        Swal.fire({
           icon: "success",
           title: "Request Raised",
-          text: `Request for "${agentId}" has been raised successfully.`,
           timer: 1500,
           showConfirmButton: false,
         });
-      } else {
-        throw new Error(res.error || "Something went wrong");
       }
-    } catch (error) {
-      console.error("Error raising request:", error);
+    } catch (err) {
+      console.error(err);
       Swal.fire("Error", "Failed to raise request", "error");
+    } finally {
+      setRequestingAgentId(null);
+      setIsRequestModalOpen(false);
+      fetchRequestedAgents();
     }
   };
 
@@ -346,6 +409,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
         agentId,
         bussinesId: businessId,
       });
+
       console.log("dsdsdsdsdsdewrerrewrew", data);
       onViewAgent(
         data?.data?.agent,
@@ -505,9 +569,9 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                     {" "}
                     Plan
                   </th>
-                  {/* <th className="text-left py-3 px-4 font-semibold text-gray-700">
+                  <th className="text-left py-3 px-4 font-semibold text-gray-700">
                     Actions
-                  </th> */}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -534,37 +598,74 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                     </td>
                   </tr>
                 ) : (
-                  paginatedAgents.map((row) => (
-                    <tr
-                      key={row.agentId}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="py-3 px-4 text-gray-600">{row.agentId}</td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {row.userName}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {row.userEmail}
-                      </td>
-                      <td className="py-3 px-4 font-medium">
-                        {row.businessName}
-                      </td>
-                      <td className="py-3 px-4 font-medium">{row.agentName}</td>
-                      <td className="py-3 px-4 font-medium">
-                        {row.status === 1 ? (
-                          <span className="text-green-600 font-semibold">
-                            Active
-                          </span>
-                        ) : (
-                          <span className="text-red-600 font-semibold">
-                            Inactive
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-3 px-4 text-gray-600">
-                        {row.agentPlan}
-                      </td>
-                      {/* <td className="py-3 px-4">
+                  paginatedAgents.map((row) => {
+                    const matchedRequest = alreadyrequest.find(
+                      (req: any) => req.agentId === row.agentId
+                    );
+
+                    let buttonLabel = "Raise Request";
+                    let disabled = false;
+
+                    if (matchedRequest) {
+                      if (matchedRequest.Status === "Not Resolved") {
+                        buttonLabel = "Raised";
+                        disabled = true;
+                      } else if (matchedRequest.Status === "Resolved") {
+                        buttonLabel = "Resolved";
+                        disabled = true;
+                      }
+                    }
+
+                    const button = (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-blue-600 hover:text-blue-700"
+                        onClick={() => {
+                          setSelectedAgentId(row.agentId);
+                          setSelectedAgentEmail(row.userEmail);
+                          setIsRequestModalOpen(true);
+                        }}
+                        disabled={disabled}
+                      >
+                        {buttonLabel}
+                      </Button>
+                    );
+                    return (
+                      <tr
+                        key={row.agentId}
+                        className="border-b border-gray-100 hover:bg-gray-50"
+                      >
+                        <td className="py-3 px-4 text-gray-600">
+                          {row.agentId}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {row.userName}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {row.userEmail}
+                        </td>
+                        <td className="py-3 px-4 font-medium">
+                          {row.businessName}
+                        </td>
+                        <td className="py-3 px-4 font-medium">
+                          {row.agentName}
+                        </td>
+                        <td className="py-3 px-4 font-medium">
+                          {row.status === 1 ? (
+                            <span className="text-green-600 font-semibold">
+                              Active
+                            </span>
+                          ) : (
+                            <span className="text-red-600 font-semibold">
+                              Inactive
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-gray-600">
+                          {row.agentPlan}
+                        </td>
+                        {/* <td className="py-3 px-4">
                         <Button
                           size="sm"
                           variant="outline"
@@ -574,7 +675,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                           <Eye className="h-4 w-4" />
                         </Button>
                       </td> */}
-                      {/* <td>
+                        {/* <td>
                         <Button
                           size="sm"
                           variant="outline"
@@ -584,30 +685,33 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </td> */}
-                      {/* <td>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-blue-600 hover:text-blue-700"
-                          onClick={() => {
-                            setSelectedAgentId(row.agentId);
-                            setSelectedAgentEmail(row.userEmail);
-                            setIsRequestModalOpen(true);
-                          }}
-                        >
-                          Raise Request
-                        </Button>
-                      </td> */}
+                        <td className="py-3 px-4">
+                          <TooltipProvider>
+                            {buttonLabel === "Raised" ? (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <span className="inline-block">{button}</span>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  Request already submitted
+                                </TooltipContent>
+                              </Tooltip>
+                            ) : (
+                              button
+                            )}
+                          </TooltipProvider>
+                        </td>
 
-                      <RaiseAgentRequest
-                        isOpen={isRequestModalOpen}
-                        onClose={() => setIsRequestModalOpen(false)}
-                        agentId={selectedAgentId}
-                        email={selectedAgentEmail}
-                        onSubmit={handleRaiseRequestSubmit}
-                      />
-                    </tr>
-                  ))
+                        <RaiseAgentRequest
+                          isOpen={isRequestModalOpen}
+                          onClose={() => setIsRequestModalOpen(false)}
+                          agentId={selectedAgentId}
+                          email={selectedAgentEmail}
+                          onSubmit={handleRaiseRequest}
+                        />
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
