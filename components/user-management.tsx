@@ -63,6 +63,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
+  const [alreadyrequest, setRequestsalready] = useState([]);
   const [sortBy, setSortBy] = useState<
     "name-asc" | "name-desc" | "newest" | "oldest"
   >("newest");
@@ -104,25 +105,25 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   }
   useEffect(() => {
     fetchUsers();
+    fetchRequestedUsers();
   }, []);
 
+  const fetchRequestedUsers = async () => {
+    try {
+      const currentUserId = localStorage.getItem("userId");
+
+      const data = await checkUserRequestStatus(currentUserId);
+      console.log("test", data);
+
+      setRequestsalready(data.requests);
+
+      // setRequestedUsers(updatedRequestedUsers);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
-    const fetchRequestedUsers = async () => {
-      try {
-        const updatedRequestedUsers = new Map<string, string | null>();
-        for (const user of users) {
-          const data = await checkUserRequestStatus(user.id);
-          if (typeof data === "boolean") {
-            if (data) updatedRequestedUsers.set(user.id, "Not Resolved");
-          } else if (data?.alreadyRequested) {
-            updatedRequestedUsers.set(user.id, data.Status || "Not Resolved");
-          }
-        }
-        setRequestedUsers(updatedRequestedUsers);
-      } catch (err) {
-        console.error(err);
-      }
-    };
     if (users.length) fetchRequestedUsers();
   }, [users]);
 
@@ -338,6 +339,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   const handleRaiseRequest = (userId: string, email: string) => {
     setSelectedUserId(userId);
     setSelectedUserEmail(email);
+
     setIsRequestModalOpen(true);
   };
 
@@ -348,7 +350,18 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
   ) => {
     try {
       setRequestingUserId(userId);
-      const res = await raiseRequest({ userId, email, comment });
+
+      const raisedByUserId = localStorage.getItem("userId");
+
+      setRequestedUsers((prev) => new Map(prev.set(userId, "Not Resolved")));
+
+      const res = await raiseRequest({
+        userId,
+        email,
+        comment,
+        raisedByUserId,
+      });
+
       if (res?.status) {
         Swal.fire({
           icon: "success",
@@ -356,12 +369,17 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
           timer: 1500,
           showConfirmButton: false,
         });
-        setRequestedUsers((prev) => new Map(prev.set(userId, "Not Resolved")));
       } else {
         Swal.fire({
           icon: "error",
           title: "Failed",
           text: "Failed to raise request.",
+        });
+        // rollback agar fail ho jaye
+        setRequestedUsers((prev) => {
+          const updated = new Map(prev);
+          updated.delete(userId);
+          return updated;
         });
       }
     } catch {
@@ -372,6 +390,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
       });
     } finally {
       setRequestingUserId(null);
+      fetchRequestedUsers();
     }
   };
 
@@ -516,7 +535,15 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => onViewUser(user)}
-                                  disabled={isRequestDone}
+                                  disabled={
+                                    requestingUserId === user.id ||
+                                    alreadyrequest.some(
+                                      (req) =>
+                                        req.userId === user.id &&
+                                        (req.Status === "Not Resolved" ||
+                                          req.Status === "Resolved")
+                                    )
+                                  }
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
@@ -524,7 +551,15 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                                   size="sm"
                                   variant="outline"
                                   onClick={() => handleEditUser(user)}
-                                  disabled={isRequestDone}
+                                  disabled={
+                                    requestingUserId === user.id ||
+                                    alreadyrequest.some(
+                                      (req) =>
+                                        req.userId === user.id &&
+                                        (req.Status === "Not Resolved" ||
+                                          req.Status === "Resolved")
+                                    )
+                                  }
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
@@ -554,43 +589,58 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
                               </Button> */}
 
                                 <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <span>
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          className="text-blue-600 hover:text-blue-700"
-                                          onClick={() =>
-                                            handleRaiseRequest(
-                                              user.id,
-                                              user.email
-                                            )
-                                          }
-                                          disabled={isRequestDone}
-                                        >
-                                          {requestingUserId === user.id ? (
-                                            <div className="h-4 w-4 border-2 border-blue-600 border-t-transparent animate-spin rounded-full" />
-                                          ) : requestedUsers.get(user.id) ===
-                                            "Not Resolved" ? (
-                                            "Raised"
-                                          ) : requestedUsers.get(user.id) ===
-                                            "Resolved" ? (
-                                            "Resolved"
-                                          ) : (
-                                            "Raise Request"
-                                          )}
-                                        </Button>
-                                      </span>
-                                    </TooltipTrigger>
-                                    {requestedUsers.get(user.id) ===
-                                      "Not Resolved" && (
-                                      <TooltipContent>
-                                        Request already submitted
-                                      </TooltipContent>
-                                    )}
-                                  </Tooltip>
-                                </TooltipProvider>
+  {(() => {
+    const matchedRequest = alreadyrequest.find(
+      (req) => req.userId === user.id
+    );
+
+    const isRaised =
+      matchedRequest && matchedRequest.Status === "Not Resolved";
+
+    const isResolved =
+      matchedRequest && matchedRequest.Status === "Resolved";
+
+    const disabled =
+      requestingUserId === user.id || isRaised || isResolved;
+
+    const buttonLabel = !matchedRequest
+      ? "Raise Request"
+      : matchedRequest.Status === "Not Resolved"
+      ? "Raised"
+      : matchedRequest.Status === "Resolved"
+      ? "Resolved"
+      : "Raise Request";
+
+    const button = (
+      <Button
+        size="sm"
+        variant="outline"
+        className="text-blue-600 hover:text-blue-700"
+        onClick={() => handleRaiseRequest(user.id, user.email)}
+        disabled={disabled}
+      >
+        {buttonLabel}
+      </Button>
+    );
+
+    // ✅ Tooltip सिर्फ "Raised" पर दिखाना
+    if (isRaised) {
+      return (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <span>{button}</span>
+          </TooltipTrigger>
+          <TooltipContent>Request already submitted</TooltipContent>
+        </Tooltip>
+      );
+    }
+
+    // ✅ बाकी cases में सिर्फ button
+    return button;
+  })()}
+</TooltipProvider>
+
+
                                 <RaiseRequestModal
                                   isOpen={isRequestModalOpen}
                                   onClose={() => setIsRequestModalOpen(false)}

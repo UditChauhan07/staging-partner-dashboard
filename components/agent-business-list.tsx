@@ -96,6 +96,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
   const [selectedAgentEmail, setSelectedAgentEmail] = useState<string | null>(
     null
   );
+  const [alreadyrequest, setRequestsalready] = useState([]);
   console.log(selectedAgent, "selectedAgent");
 
   async function fetchUsers() {
@@ -125,7 +126,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
       }));
       console.log(mappedUsers, "mappedUsers");
       setuserList(mappedUsers);
-      setLoaders(true);
+      setLoaders(false);
     } catch (error) {
       console.error("Failed to fetch users", error);
       setLoaders(false);
@@ -133,34 +134,49 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
   }
   useEffect(() => {
     fetchUsers();
+    fetchRequestedAgents();
   }, []);
 
   /** Fetch requested agent status */
-  useEffect(() => {
-    const fetchRequestedAgents = async () => {
-      try {
-        const updatedRequestedAgents = new Map<string, string>();
-        const promises = agentData.map(async (agent) => {
-          const data = await getAgentRequestStatus(agent.agentId);
-          if (typeof data === "boolean") {
-            if (data) updatedRequestedAgents.set(agent.agentId, "Not Resolved");
-          } else if (data?.alreadyRequested) {
-            updatedRequestedAgents.set(
-              agent.agentId,
-              data.Status || "Not Resolved"
-            );
-          }
-        });
-        await Promise.all(promises);
-        setRequestedAgents(updatedRequestedAgents);
-      } catch (err) {
-        console.error(err);
-      }
-    };
+  // useEffect(() => {
+  //   const fetchRequestedAgents = async () => {
+  //     try {
+  //       const updatedRequestedAgents = new Map<string, string>();
+  //       const promises = agentData.map(async (agent) => {
+  //         const data = await getAgentRequestStatus(agent.agentId);
+  //         if (typeof data === "boolean") {
+  //           if (data) updatedRequestedAgents.set(agent.agentId, "Not Resolved");
+  //         } else if (data?.alreadyRequested) {
+  //           updatedRequestedAgents.set(
+  //             agent.agentId,
+  //             data.Status || "Not Resolved"
+  //           );
+  //         }
+  //       });
+  //       await Promise.all(promises);
+  //       setRequestedAgents(updatedRequestedAgents);
+  //     } catch (err) {
+  //       console.error(err);
+  //     }
+  //   };
 
-    if (agentData.length) fetchRequestedAgents();
-  }, [agentData]);
+  //   if (agentData.length) fetchRequestedAgents();
+  // }, [agentData]);
 
+  const fetchRequestedAgents = async () => {
+    try {
+      const requestRaisedby = localStorage.getItem("userId");
+
+      const data = await getAgentRequestStatus(requestRaisedby);
+      console.log("test", data);
+
+      setRequestsalready(data.requests);
+
+      // setRequestedUsers(updatedRequestedUsers);
+    } catch (err) {
+      console.error(err);
+    }
+  };
   const fetchData = async () => {
     setLoaders(true);
     const referredBy =
@@ -355,8 +371,14 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
   ) => {
     if (!comment || !agentId || !email) return; // safeguard
     try {
+      const requestRaisedby = localStorage.getItem("userId");
       setRequestingAgentId(agentId);
-      const res = await raiseagentRequest({ agentId, email, comment });
+      const res = await raiseagentRequest({
+        agentId,
+        email,
+        comment,
+        requestRaisedby,
+      });
       if (res.status) {
         setRequestedAgents(
           (prev) => new Map(prev.set(agentId, "Not Resolved"))
@@ -373,7 +395,8 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
       Swal.fire("Error", "Failed to raise request", "error");
     } finally {
       setRequestingAgentId(null);
-      setIsRequestModalOpen(false); // close modal after success
+      setIsRequestModalOpen(false);
+      fetchRequestedAgents();
     }
   };
 
@@ -386,6 +409,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
         agentId,
         bussinesId: businessId,
       });
+
       console.log("dsdsdsdsdsdewrerrewrew", data);
       onViewAgent(
         data?.data?.agent,
@@ -575,10 +599,22 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                   </tr>
                 ) : (
                   paginatedAgents.map((row) => {
-                    const status = requestedAgents.get(row.agentId);
-                    const isNotResolved = status === "Not Resolved";
-                    const isResolved = status === "Resolved";
-                    const disabled = !!status;
+                    const matchedRequest = alreadyrequest.find(
+                      (req: any) => req.agentId === row.agentId
+                    );
+
+                    let buttonLabel = "Raise Request";
+                    let disabled = false;
+
+                    if (matchedRequest) {
+                      if (matchedRequest.Status === "Not Resolved") {
+                        buttonLabel = "Raised";
+                        disabled = true;
+                      } else if (matchedRequest.Status === "Resolved") {
+                        buttonLabel = "Resolved";
+                        disabled = true;
+                      }
+                    }
 
                     const button = (
                       <Button
@@ -592,11 +628,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                         }}
                         disabled={disabled}
                       >
-                        {isNotResolved
-                          ? "Raised"
-                          : isResolved
-                          ? "Resolved"
-                          : "Raise Request"}
+                        {buttonLabel}
                       </Button>
                     );
                     return (
@@ -655,7 +687,7 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                       </td> */}
                         <td className="py-3 px-4">
                           <TooltipProvider>
-                            {isNotResolved ? (
+                            {buttonLabel === "Raised" ? (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <span className="inline-block">{button}</span>
@@ -676,18 +708,6 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                           agentId={selectedAgentId}
                           email={selectedAgentEmail}
                           onSubmit={handleRaiseRequest}
-
-
-
-
-
-
-
-
-
-
-
-                          
                         />
                       </tr>
                     );
