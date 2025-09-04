@@ -518,14 +518,16 @@ interface TestimonialCardProps {
 }
 
 const tImage = (p?: string | null) =>
-  p ? toApiFileUrl(p) : "/images/defaultiprofile.svg";
+  p ? toApiFileUrl(p) : '/images/defaultprofile.svg';
 
 const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }) => {
   const [loading, setLoading] = useState(false);
   const [dbTestimonials, setDbTestimonials] = useState<DbTestimonial[]>([]);
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
 
+  // Fetch testimonials
   useEffect(() => {
     if (!referalName) return;
     let cancelled = false;
@@ -545,75 +547,60 @@ const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }
       }
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [referalName]);
+
+  // Check for overflow to toggle scrollbar
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (trackRef.current && scrollerRef.current) {
+        const trackWidth = trackRef.current.scrollWidth;
+        const containerWidth = scrollerRef.current.clientWidth;
+        setIsOverflowing(trackWidth > containerWidth);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [loading, dbTestimonials]);
 
   // Default testimonials (fallback when none exist in DB)
   const defaultTestimonials: TestimonialCardProps[] = [
     {
-      name: "Sarah Johnson",
-      role: "CEO, TechStart Inc.",
+      name: 'Sarah Johnson',
+      role: 'CEO, TechStart Inc.',
       quote:
         "Implementing rexpt's AI receptionist has been a game-changer for our business. Our calls are handled professionally 24/7, and the AI's ability to understand context is remarkable. It's like having a full-time receptionist at a fraction of the cost.",
-      image: "/images/SarahCeo.png",
+      image: '/images/SarahCeo.png',
     },
     {
-      name: "Michael Chen",
-      role: "Founder, Innovate Solutions",
+      name: 'Michael Chen',
+      role: 'Founder, Innovate Solutions',
       quote:
         "We were skeptical about an AI handling our important client calls, but rexpt has exceeded our expectations. The voice sounds completely natural, and clients often don't realize they're speaking with an AI. It's saved us countless hours and improved our response time.",
-      image: "/images/Michaelfounder.png",
+      image: '/images/Michaelfounder.png',
     },
     {
-      name: "Emily Rodriguez",
-      role: "Office Manager, Legal Partners",
+      name: 'Emily Rodriguez',
+      role: 'Office Manager, Legal Partners',
       quote:
         "As a law firm, we need to ensure every call is handled with care and confidentiality. The rexpt AI receptionist has been perfect for our needs, accurately routing calls and capturing important information. I can't imagine going back to our old system.",
-      image: "/images/ceo2.png",
+      image: '/images/ceo2.png',
     },
   ];
 
-  const fromDb: TestimonialCardProps[] =
-    dbTestimonials.map((t) => ({
-      name: t.author,
-      role: t.roleTitle || "",
-      quote: t.quote,
-      image: tImage(t.imagePath),
-    }));
+  const fromDb: TestimonialCardProps[] = dbTestimonials.map((t) => ({
+    name: t.author,
+    role: t.roleTitle || '',
+    quote: t.quote,
+    image: tImage(t.imagePath),
+  }));
 
   const items: TestimonialCardProps[] =
     !loading && fromDb.length > 0 ? fromDb : defaultTestimonials;
-
-  // Build a seamless loop by tripling the set
-  const loopItems = [...items, ...items, ...items];
-
-  // Set initial scroll to the middle copy and loop when reaching edges
-  useEffect(() => {
-    const scroller = scrollerRef.current;
-    const track = trackRef.current;
-    if (!scroller || !track) return;
-
-    const totalWidth = track.scrollWidth;
-    const oneSetWidth = totalWidth / 3;
-
-    // Start in the middle set so we can scroll both ways
-    scroller.scrollLeft = oneSetWidth;
-
-    const onScroll = () => {
-      const x = scroller.scrollLeft;
-      // If we hit the left edge of the first copy, jump ahead by one set
-      if (x <= 1) {
-        scroller.scrollLeft = x + oneSetWidth;
-      }
-      // If we hit the right edge of the last copy, jump back by one set
-      else if (x >= oneSetWidth * 2 - 1) {
-        scroller.scrollLeft = x - oneSetWidth;
-      }
-    };
-
-    scroller.addEventListener("scroll", onScroll, { passive: true });
-    return () => scroller.removeEventListener("scroll", onScroll);
-  }, [items.length]);
 
   return (
     <section
@@ -621,17 +608,21 @@ const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }
       className="rexpt-section py-12 section-reveal"
       aria-label="What Our Customers Say"
     >
-      <div className="container mx-auto px-4">
+ <div className="container mx-auto px-4">
         <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
           What Our Customers Say
         </h2>
 
-        {/* Horizontal, uniform-size, infinite-loop scroller */}
+        {/* Horizontal scroller with uniform-size cards */}
         <div
           ref={scrollerRef}
-          className="overflow-x-auto overflow-y-hidden pb-2 pr-1 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-        >
-          <div ref={trackRef} className="flex gap-6 items-stretch">
+          className={`overflow-y-hidden pb-2 pr-1 snap-x snap-mandatory ${
+            isOverflowing
+              ? 'overflow-x-auto [-ms-overflow-style:auto] [scrollbar-width:auto] [&::-webkit-scrollbar]:auto'
+              : 'overflow-x-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+          } md:[&::-webkit-scrollbar]:auto scroll-smooth`}
+    >
+          <div ref={trackRef} className="flex gap-6 items-stretch—" style={{ minWidth: 'fit-content' }}>
             {loading && (
               <>
                 <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
@@ -641,7 +632,7 @@ const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }
             )}
 
             {!loading &&
-              loopItems.map((t, idx) => (
+              items.map((t, idx) => (
                 <div
                   key={`${t.name}-${idx}`}
                   className="snap-start w-[340px] md:w-[360px] flex-shrink-0"
@@ -661,19 +652,14 @@ const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }
   );
 };
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({
-  name,
-  role,
-  quote,
-  image,
-}) => (
+const TestimonialCard: React.FC<TestimonialCardProps> = ({ name, role, quote, image }) => (
   <figure className="bg-white shadow-md rounded-lg p-4 w-[340px] md:w-[360px] h-[260px] flex flex-col">
     <blockquote
       className="mb-3 text-sm leading-relaxed overflow-hidden"
       style={{
-        display: "-webkit-box",
+        display: '-webkit-box',
         WebkitLineClamp: 4,
-        WebkitBoxOrient: "vertical",
+        WebkitBoxOrient: 'vertical',
       }}
     >
       “{quote}”
@@ -690,7 +676,6 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
     </figcaption>
   </figure>
 );
-
 
 // -----------------------------
 // Final CTA Component
@@ -749,9 +734,9 @@ const PartnerContact: React.FC<PartnerContactProps> = ({
     aria-label="Contact Your Rexpt Partner"
   >
     <div className="container mx-auto px-4">
-      <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
+      {/* <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
         Questions? Contact Your Rexpt Partner
-      </h2>
+      </h2> */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
         <ContactCard
           title="Partner's Name"
@@ -851,35 +836,44 @@ const AboutSection: React.FC<{
             </div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="relative">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style={{display:'flex'}}>
+            <div className="relative" style={{width:'100%'}}>
               <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-br from-[#C6AFF6] to-transparent blur-2xl opacity-60 pointer-events-none" />
               <div className="relative overflow-hidden rounded-[24px] ring-1 ring-[#6424EC]/10 shadow-lg">
                 <img
                   src={imgSrc}
                   alt="About"
-                  className="w-full h-[360px] object-cover"
+                  className="w-full h-[360px] "
                 />
               </div>
             </div>
 
-            <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6">
-              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                {desc}
-              </p>
+         <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6 min-h-[300px]">
+  <div className="relative group">
+    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg cursor-pointer">
+      {desc.length > 800 ? desc.slice(0, 800) + "..." : desc}
+    </p>
 
-              <div className="mt-6 flex flex-wrap gap-2">
-                <span className="text-xs px-3 py-1 rounded-full bg-rexpt-primary-50 text-rexpt-primary">
-                  24/7 Availability
-                </span>
-                <span className="text-xs px-3 py-1 rounded-full bg-rexpt-primary-50 text-rexpt-primary">
-                  Natural Calls
-                </span>
-                <span className="text-xs px-3 py-1 rounded-full bg-rexpt-primary-50 text-rexpt-primary">
-                  Smart Routing
-                </span>
-              </div>
-            </div>
+    {desc.length > 800 && (
+  <span className="absolute z-20 hidden group-hover:block 
+    bg-black 
+    text-white text-sm font-sm shadow-2xl rounded-xl p-4 
+    max-w-xxl -bottom-3 left-0 translate-y-full 
+    animate-fadeIn border border-white/20
+  ">
+    <span className="block">{desc}</span>
+
+    {/* Tooltip arrow */}
+    <span className="absolute -top-2 left-6 w-4 h-4 rotate-45 
+      bg-black 
+      border-l border-t border-white/20
+    "></span>
+  </span>
+)}
+
+  </div>
+</div>
+
           </div>
         )}
       </div>
@@ -1171,17 +1165,18 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
       <BenefitsSection />
       <TestimonialsSection referalName={ReferalName} />
       <FinalCTA ReferalName={ReferalName} />
-      <PartnerContact
-        PARTNER_PHONE={PARTNER_PHONE}
-        PARTNER_NAME={PARTNER_NAME}
-        PARTNER_EMAIL={PARTNER_EMAIL}
-      />
       <AboutSection
         name={PARTNER_NAME}
         description={aboutDesc}
         imageUrl={aboutImgUrl}
         loading={aboutLoading}
       />
+      <PartnerContact
+        PARTNER_PHONE={PARTNER_PHONE}
+        PARTNER_NAME={PARTNER_NAME}
+        PARTNER_EMAIL={PARTNER_EMAIL}
+      />
+      
       <Footer />
       {/* 
       <SubscriptionModal
