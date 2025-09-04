@@ -1455,7 +1455,7 @@ const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                       </SelectItem>
                     ))}
 
-                  {!businessTypes.some(
+                  {!businessTypes?.some(
                     (b) => b.type.toLowerCase() === "other"
                   ) && <SelectItem value="Other">Other</SelectItem>}
                 </SelectContent>
@@ -1470,7 +1470,7 @@ const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
                     const trimmed = newBusinessType.trim();
                     if (
                       trimmed &&
-                      !businessTypes.some(
+                      !businessTypes?.some(
                         (b) => b.type.toLowerCase() === trimmed.toLowerCase()
                       )
                     ) {
