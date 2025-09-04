@@ -199,6 +199,7 @@ export const raiseRequest = async (payload: {
   userId: string;
   email: string;
   comment: string;
+  raisedByUserId: string;
 }) => {
   try {
     const res = await axios.post(`${URL}/api/endusers/raiserequest`, payload);
@@ -232,9 +233,11 @@ export const getAllRaiseUserRequest = async () => {
   }
 };
 
-export const checkUserRequestStatus = async (userId: string) => {
+export const checkUserRequestStatus = async (currentUserId: string) => {
   try {
-    const res = await fetch(`${URL}/api/endusers/getuserrequest/${userId}`);
+    const res = await fetch(
+      `${URL}/api/endusers/getuserrequest/${currentUserId}`
+    );
     if (!res.ok) throw new Error("Failed to fetch request status");
     const data = await res.json();
     // data is { alreadyRequested: boolean, status: string | null }
@@ -244,9 +247,9 @@ export const checkUserRequestStatus = async (userId: string) => {
     return { alreadyRequested: false, status: null }; // fallback
   }
 };
-export const getAgentRequestStatus = async (agentId: string) => {
+export const getAgentRequestStatus = async (userId: string) => {
   try {
-    const res = await fetch(`${URL}/api/analytics/getAgentStatus/${agentId}`);
+    const res = await fetch(`${URL}/api/analytics/getAgentStatus/${userId}`);
     if (!res.ok) throw new Error("Failed to fetch request status");
     const data = await res.json();
     // data is { alreadyRequested: boolean, status: string | null }
