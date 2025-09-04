@@ -1,9 +1,18 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Link as ScrollLink, animateScroll as scroll } from "react-scroll";
 import { useParams, useSearchParams } from "next/navigation";
 import SubscriptionModal from "@/components/pricing-modal";
+
+const toApiFileUrl = (p?: string) => {
+  if (!p) return "";
+  if (/^https?:\/\//i.test(p)) return p; // already absolute
+  const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  const cleaned = p.replace(/^(\.\.\/)+public/, "").replace(/^\/+/, "");
+  return `${base}/${cleaned}`;
+};
+
 
 // -----------------------------
 // SVG Icon Components
@@ -328,7 +337,7 @@ const HeroSection: React.FC = ({ ReferalName }) => (
           Meet Rexpt: Your Business's New Voice.
         </h1>
         <p className="text-lg opacity-95  text-black mb-6">
-         <strong>Rexpt</strong> handles your Inbound calls 24/7,schedules appointments,nurtures leads.
+          <strong>Rexpt</strong> handles your Inbound calls 24/7,schedules appointments,nurtures leads.
         </p>
         <div className="flex gap-4 justify-center">
           <a
@@ -493,6 +502,14 @@ const BenefitItem: React.FC<BenefitItemProps> = ({ Icon, title, text }) => (
 // -----------------------------
 // Testimonials Section Component
 // -----------------------------
+type DbTestimonial = {
+  id: number;
+  quote: string;
+  author: string;
+  roleTitle?: string | null;
+  imagePath?: string | null;
+};
+
 interface TestimonialCardProps {
   name: string;
   role: string;
@@ -500,39 +517,149 @@ interface TestimonialCardProps {
   image: string;
 }
 
-const TestimonialsSection: React.FC = () => (
-  <section
-    id="testimonials"
-    className="rexpt-section py-12 section-reveal"
-    aria-label="What Our Customers Say"
-  >
-    <div className="container mx-auto px-4">
-      <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
-        What Our Customers Say
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-        <TestimonialCard
-          name="Sarah Johnson"
-          role="CEO, TechStart Inc."
-          quote="Implementing rexpt's AI receptionist has been a game-changer for our business. Our calls are handled professionally 24/7, and the AI's ability to understand context is remarkable. It's like having a full-time receptionist at a fraction of the cost."
-          image="/images/SarahCeo.png"
-        />
-        <TestimonialCard
-          name="Michael Chen"
-          image="/images/Michaelfounder.png"
-          role="Founder, Innovate Solutions"
-          quote="We were skeptical about an AI handling our important client calls, but rexpt has exceeded our expectations. The voice sounds completely natural, and clients often don't realize they're speaking with an AI. It's saved us countless hours and improved our response time."
-        />
-        <TestimonialCard
-          name="Emily Rodriguez"
-          image="/images/ceo2.png"
-          role="Office Manager, Legal Partners"
-          quote="As a law firm, we need to ensure every call is handled with care and confidentiality. The rexpt AI receptionist has been perfect for our needs, accurately routing calls and capturing important information. I can't imagine going back to our old system."
-        />
+const tImage = (p?: string | null) =>
+  p ? toApiFileUrl(p) : "/images/defaultiprofile.svg";
+
+const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }) => {
+  const [loading, setLoading] = useState(false);
+  const [dbTestimonials, setDbTestimonials] = useState<DbTestimonial[]>([]);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!referalName) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/testimonials/${referalName}`
+        );
+        const arr = Array.isArray(res.data?.testimonials) ? res.data.testimonials : [];
+        if (!cancelled) setDbTestimonials(arr);
+      } catch {
+        if (!cancelled) setDbTestimonials([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => { cancelled = true; };
+  }, [referalName]);
+
+  // Default testimonials (fallback when none exist in DB)
+  const defaultTestimonials: TestimonialCardProps[] = [
+    {
+      name: "Sarah Johnson",
+      role: "CEO, TechStart Inc.",
+      quote:
+        "Implementing rexpt's AI receptionist has been a game-changer for our business. Our calls are handled professionally 24/7, and the AI's ability to understand context is remarkable. It's like having a full-time receptionist at a fraction of the cost.",
+      image: "/images/SarahCeo.png",
+    },
+    {
+      name: "Michael Chen",
+      role: "Founder, Innovate Solutions",
+      quote:
+        "We were skeptical about an AI handling our important client calls, but rexpt has exceeded our expectations. The voice sounds completely natural, and clients often don't realize they're speaking with an AI. It's saved us countless hours and improved our response time.",
+      image: "/images/Michaelfounder.png",
+    },
+    {
+      name: "Emily Rodriguez",
+      role: "Office Manager, Legal Partners",
+      quote:
+        "As a law firm, we need to ensure every call is handled with care and confidentiality. The rexpt AI receptionist has been perfect for our needs, accurately routing calls and capturing important information. I can't imagine going back to our old system.",
+      image: "/images/ceo2.png",
+    },
+  ];
+
+  const fromDb: TestimonialCardProps[] =
+    dbTestimonials.map((t) => ({
+      name: t.author,
+      role: t.roleTitle || "",
+      quote: t.quote,
+      image: tImage(t.imagePath),
+    }));
+
+  const items: TestimonialCardProps[] =
+    !loading && fromDb.length > 0 ? fromDb : defaultTestimonials;
+
+  // Build a seamless loop by tripling the set
+  const loopItems = [...items, ...items, ...items];
+
+  // Set initial scroll to the middle copy and loop when reaching edges
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const track = trackRef.current;
+    if (!scroller || !track) return;
+
+    const totalWidth = track.scrollWidth;
+    const oneSetWidth = totalWidth / 3;
+
+    // Start in the middle set so we can scroll both ways
+    scroller.scrollLeft = oneSetWidth;
+
+    const onScroll = () => {
+      const x = scroller.scrollLeft;
+      // If we hit the left edge of the first copy, jump ahead by one set
+      if (x <= 1) {
+        scroller.scrollLeft = x + oneSetWidth;
+      }
+      // If we hit the right edge of the last copy, jump back by one set
+      else if (x >= oneSetWidth * 2 - 1) {
+        scroller.scrollLeft = x - oneSetWidth;
+      }
+    };
+
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, [items.length]);
+
+  return (
+    <section
+      id="testimonials"
+      className="rexpt-section py-12 section-reveal"
+      aria-label="What Our Customers Say"
+    >
+      <div className="container mx-auto px-4">
+        <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
+          What Our Customers Say
+        </h2>
+
+        {/* Horizontal, uniform-size, infinite-loop scroller */}
+        <div
+          ref={scrollerRef}
+          className="overflow-x-auto overflow-y-hidden pb-2 pr-1 snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          <div ref={trackRef} className="flex gap-6 items-stretch">
+            {loading && (
+              <>
+                <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+                <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+                <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+              </>
+            )}
+
+            {!loading &&
+              loopItems.map((t, idx) => (
+                <div
+                  key={`${t.name}-${idx}`}
+                  className="snap-start w-[340px] md:w-[360px] flex-shrink-0"
+                >
+                  <TestimonialCard
+                    name={t.name}
+                    role={t.role}
+                    quote={t.quote}
+                    image={t.image}
+                  />
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
-    </div>
-  </section>
-);
+    </section>
+  );
+};
 
 const TestimonialCard: React.FC<TestimonialCardProps> = ({
   name,
@@ -540,31 +667,30 @@ const TestimonialCard: React.FC<TestimonialCardProps> = ({
   quote,
   image,
 }) => (
-  <figure className="bg-white shadow-md rounded-lg p-4 w-full max-w-md">
-    <blockquote className="mb-3">“{quote}”</blockquote>
-    <figcaption className="flex items-center gap-2">
-      <div
-        className="rounded-full bg-rexpt-primary-50 p-1"
-        style={{
-          height: "70px",
-          width: "70px",
-          borderRadius: "50%",
-          display: "flex",
-          objectFit: "cover",
-        }}
-      >
-        <img
-          src={image}
-          height={"70px"}
-          width={"70px"}
-          style={{ borderRadius: "50%" }}
-        />
+  <figure className="bg-white shadow-md rounded-lg p-4 w-[340px] md:w-[360px] h-[260px] flex flex-col">
+    <blockquote
+      className="mb-3 text-sm leading-relaxed overflow-hidden"
+      style={{
+        display: "-webkit-box",
+        WebkitLineClamp: 4,
+        WebkitBoxOrient: "vertical",
+      }}
+    >
+      “{quote}”
+    </blockquote>
+
+    <figcaption className="mt-auto flex items-center gap-3">
+      <div className="h-16 w-16 rounded-full overflow-hidden bg-rexpt-primary-50 flex-shrink-0">
+        <img src={image} alt={name} className="h-full w-full object-cover" />
       </div>
-      <span className="font-semibold">{name}</span>
-      <span className="text-gray-600">{role}</span>
+      <div className="min-w-0">
+        <div className="font-semibold truncate">{name}</div>
+        {role ? <div className="text-gray-600 text-sm truncate">{role}</div> : null}
+      </div>
     </figcaption>
   </figure>
 );
+
 
 // -----------------------------
 // Final CTA Component
@@ -695,6 +821,72 @@ const ContactCard: React.FC<ContactCardProps> = ({ title, value, Icon }) => (
   </div>
 );
 
+const AboutSection: React.FC<{
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+  loading?: boolean;
+}> = ({ name, description, imageUrl, loading }) => {
+  const desc =
+    (description && description.trim()) ||
+    `Hi! I'm ${name || "your Rexpt partner"}. I help businesses automate inbound calls with AI — scheduling appointments, qualifying leads, and routing calls 24/7.`;
+
+  const imgSrc = (imageUrl && imageUrl.trim()) || "/images/defaultiprofile.svg";
+
+  return (
+    <section id="about" className="rexpt-section py-14 bg-white section-reveal">
+      <div className="container mx-auto px-4">
+        <h2 className="text-center text-3xl font-extrabold font-lato mb-8">
+          About {name || "the Partner"}
+        </h2>
+
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="h-[360px] rounded-[24px] bg-gray-200 animate-pulse" />
+            <div className="rounded-2xl p-6 ring-1 ring-[#6424EC]/10 bg-white/70 shadow-md">
+              <div className="h-5 w-2/3 bg-gray-200 mb-3 animate-pulse rounded" />
+              <div className="h-4 w-full bg-gray-200 mb-2 animate-pulse rounded" />
+              <div className="h-4 w-5/6 bg-gray-200 mb-2 animate-pulse rounded" />
+              <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="relative">
+              <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-br from-[#C6AFF6] to-transparent blur-2xl opacity-60 pointer-events-none" />
+              <div className="relative overflow-hidden rounded-[24px] ring-1 ring-[#6424EC]/10 shadow-lg">
+                <img
+                  src={imgSrc}
+                  alt="About"
+                  className="w-full h-[360px] object-cover"
+                />
+              </div>
+            </div>
+
+            <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6">
+              <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                {desc}
+              </p>
+
+              <div className="mt-6 flex flex-wrap gap-2">
+                <span className="text-xs px-3 py-1 rounded-full bg-rexpt-primary-50 text-rexpt-primary">
+                  24/7 Availability
+                </span>
+                <span className="text-xs px-3 py-1 rounded-full bg-rexpt-primary-50 text-rexpt-primary">
+                  Natural Calls
+                </span>
+                <span className="text-xs px-3 py-1 rounded-full bg-rexpt-primary-50 text-rexpt-primary">
+                  Smart Routing
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
+
 // -----------------------------
 // Footer Component
 // -----------------------------
@@ -801,6 +993,9 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedPlanName, setSelectedPlanName] = useState("");
   const searchParams = useSearchParams();
+  const [aboutDesc, setAboutDesc] = useState<string>("");
+  const [aboutImgUrl, setAboutImgUrl] = useState<string>("");
+  const [aboutLoading, setAboutLoading] = useState<boolean>(false);
 
   const discountToPlanMap: Record<number, string> = {
     90: "Starter",
@@ -808,6 +1003,38 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
     450: "Growth",
     700: "Corporate",
   };
+  useEffect(() => {
+    if (!ReferalName) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setAboutLoading(true);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/endusers/aboutsection/${ReferalName}`
+        );
+        const desc = res.data?.aboutDescription || "";
+        const rel = res.data?.aboutImage || "";
+        const abs = toApiFileUrl(rel);
+
+        if (!cancelled) {
+          setAboutDesc(desc);
+          setAboutImgUrl(abs);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setAboutDesc("");
+          setAboutImgUrl("");
+        }
+      } finally {
+        if (!cancelled) setAboutLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ReferalName]);
 
   useEffect(() => {
     const isUsingVPN = country === "US";
@@ -934,20 +1161,26 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
       `}</style>
       <Header
         ReferalName={ReferalName}
-        // onGetStartedClick={() => {
-        //   setSelectedPlanName("Starter"); // या जो भी plan चाहिए
-        //   // setShowPricingModal(true);
-        // }}
+      // onGetStartedClick={() => {
+      //   setSelectedPlanName("Starter"); // या जो भी plan चाहिए
+      //   // setShowPricingModal(true);
+      // }}
       />
       <HeroSection ReferalName={ReferalName} />
       <FeaturesSection />
       <BenefitsSection />
-      <TestimonialsSection />
+      <TestimonialsSection referalName={ReferalName} />
       <FinalCTA ReferalName={ReferalName} />
       <PartnerContact
         PARTNER_PHONE={PARTNER_PHONE}
         PARTNER_NAME={PARTNER_NAME}
         PARTNER_EMAIL={PARTNER_EMAIL}
+      />
+      <AboutSection
+        name={PARTNER_NAME}
+        description={aboutDesc}
+        imageUrl={aboutImgUrl}
+        loading={aboutLoading}
       />
       <Footer />
       {/* 
