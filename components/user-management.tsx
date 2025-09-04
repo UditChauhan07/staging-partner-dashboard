@@ -375,7 +375,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
           title: "Failed",
           text: "Failed to raise request.",
         });
-        // rollback agar fail ho jaye
+       
         setRequestedUsers((prev) => {
           const updated = new Map(prev);
           updated.delete(userId);
@@ -623,7 +623,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
       </Button>
     );
 
-    // ✅ Tooltip सिर्फ "Raised" पर दिखाना
+  
     if (isRaised) {
       return (
         <Tooltip>
@@ -635,7 +635,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
       );
     }
 
-    // ✅ बाकी cases में सिर्फ button
+ 
     return button;
   })()}
 </TooltipProvider>
