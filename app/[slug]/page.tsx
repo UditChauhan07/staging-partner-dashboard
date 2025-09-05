@@ -1,9 +1,18 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import axios from "axios";
 import { Link as ScrollLink, animateScroll as scroll } from "react-scroll";
 import { useParams, useSearchParams } from "next/navigation";
 import SubscriptionModal from "@/components/pricing-modal";
+
+const toApiFileUrl = (p?: string) => {
+  if (!p) return "";
+  if (/^https?:\/\//i.test(p)) return p; // already absolute
+  const base = (process.env.NEXT_PUBLIC_API_URL || "").replace(/\/$/, "");
+  const cleaned = p.replace(/^(\.\.\/)+public/, "").replace(/^\/+/, "");
+  return `${base}/${cleaned}`;
+};
+
 
 // -----------------------------
 // SVG Icon Components
@@ -328,7 +337,7 @@ const HeroSection: React.FC = ({ ReferalName }) => (
           Meet Rexpt: Your Business's New Voice.
         </h1>
         <p className="text-lg opacity-95  text-black mb-6">
-         <strong>Rexpt</strong> handles your Inbound calls 24/7,schedules appointments,nurtures leads.
+          <strong>Rexpt</strong> handles your Inbound calls 24/7,schedules appointments,nurtures leads.
         </p>
         <div className="flex gap-4 justify-center">
           <a
@@ -493,6 +502,14 @@ const BenefitItem: React.FC<BenefitItemProps> = ({ Icon, title, text }) => (
 // -----------------------------
 // Testimonials Section Component
 // -----------------------------
+type DbTestimonial = {
+  id: number;
+  quote: string;
+  author: string;
+  roleTitle?: string | null;
+  imagePath?: string | null;
+};
+
 interface TestimonialCardProps {
   name: string;
   role: string;
@@ -500,68 +517,162 @@ interface TestimonialCardProps {
   image: string;
 }
 
-const TestimonialsSection: React.FC = () => (
-  <section
-    id="testimonials"
-    className="rexpt-section py-12 section-reveal"
-    aria-label="What Our Customers Say"
-  >
-    <div className="container mx-auto px-4">
-      <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
-        What Our Customers Say
-      </h2>
-      <div className="grid grid-cols-1 md:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-        <TestimonialCard
-          name="Sarah Johnson"
-          role="CEO, TechStart Inc."
-          quote="Implementing rexpt's AI receptionist has been a game-changer for our business. Our calls are handled professionally 24/7, and the AI's ability to understand context is remarkable. It's like having a full-time receptionist at a fraction of the cost."
-          image="/images/SarahCeo.png"
-        />
-        <TestimonialCard
-          name="Michael Chen"
-          image="/images/Michaelfounder.png"
-          role="Founder, Innovate Solutions"
-          quote="We were skeptical about an AI handling our important client calls, but rexpt has exceeded our expectations. The voice sounds completely natural, and clients often don't realize they're speaking with an AI. It's saved us countless hours and improved our response time."
-        />
-        <TestimonialCard
-          name="Emily Rodriguez"
-          image="/images/ceo2.png"
-          role="Office Manager, Legal Partners"
-          quote="As a law firm, we need to ensure every call is handled with care and confidentiality. The rexpt AI receptionist has been perfect for our needs, accurately routing calls and capturing important information. I can't imagine going back to our old system."
-        />
-      </div>
-    </div>
-  </section>
-);
+const tImage = (p?: string | null) =>
+  p ? toApiFileUrl(p) : '/images/defaultprofile.svg';
 
-const TestimonialCard: React.FC<TestimonialCardProps> = ({
-  name,
-  role,
-  quote,
-  image,
-}) => (
-  <figure className="bg-white shadow-md rounded-lg p-4 w-full max-w-md">
-    <blockquote className="mb-3">“{quote}”</blockquote>
-    <figcaption className="flex items-center gap-2">
-      <div
-        className="rounded-full bg-rexpt-primary-50 p-1"
-        style={{
-          height: "70px",
-          width: "70px",
-          borderRadius: "50%",
-          display: "flex",
-          objectFit: "cover",
-        }}
-      >
-        <img
-          src={image}
-          height={"70px"}
-          width={"70px"}
-          style={{ borderRadius: "50%" }}
-        />
+const TestimonialsSection: React.FC<{ referalName?: string }> = ({ referalName }) => {
+  const [loading, setLoading] = useState(false);
+  const [dbTestimonials, setDbTestimonials] = useState<DbTestimonial[]>([]);
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+  const trackRef = useRef<HTMLDivElement | null>(null);
+  const [isOverflowing, setIsOverflowing] = useState(false);
+
+  // Fetch testimonials
+  useEffect(() => {
+    if (!referalName) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/testimonials/${referalName}`
+        );
+        const arr = Array.isArray(res.data?.testimonials) ? res.data.testimonials : [];
+        if (!cancelled) setDbTestimonials(arr);
+      } catch {
+        if (!cancelled) setDbTestimonials([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [referalName]);
+
+  // Check for overflow to toggle scrollbar
+  useEffect(() => {
+    const checkOverflow = () => {
+      if (trackRef.current && scrollerRef.current) {
+        const trackWidth = trackRef.current.scrollWidth;
+        const containerWidth = scrollerRef.current.clientWidth;
+        setIsOverflowing(trackWidth > containerWidth);
+      }
+    };
+
+    checkOverflow();
+    window.addEventListener('resize', checkOverflow);
+    return () => window.removeEventListener('resize', checkOverflow);
+  }, [loading, dbTestimonials]);
+
+  // Default testimonials (fallback when none exist in DB)
+  const defaultTestimonials: TestimonialCardProps[] = [
+    {
+      name: 'Sarah Johnson',
+      role: 'CEO, TechStart Inc.',
+      quote:
+        "Implementing rexpt's AI receptionist has been a game-changer for our business. Our calls are handled professionally 24/7, and the AI's ability to understand context is remarkable. It's like having a full-time receptionist at a fraction of the cost.",
+      image: '/images/SarahCeo.png',
+    },
+    {
+      name: 'Michael Chen',
+      role: 'Founder, Innovate Solutions',
+      quote:
+        "We were skeptical about an AI handling our important client calls, but rexpt has exceeded our expectations. The voice sounds completely natural, and clients often don't realize they're speaking with an AI. It's saved us countless hours and improved our response time.",
+      image: '/images/Michaelfounder.png',
+    },
+    {
+      name: 'Emily Rodriguez',
+      role: 'Office Manager, Legal Partners',
+      quote:
+        "As a law firm, we need to ensure every call is handled with care and confidentiality. The rexpt AI receptionist has been perfect for our needs, accurately routing calls and capturing important information. I can't imagine going back to our old system.",
+      image: '/images/ceo2.png',
+    },
+  ];
+
+  const fromDb: TestimonialCardProps[] = dbTestimonials.map((t) => ({
+    name: t.author,
+    role: t.roleTitle || '',
+    quote: t.quote,
+    image: tImage(t.imagePath),
+  }));
+
+  const items: TestimonialCardProps[] =
+    !loading && fromDb.length > 0 ? fromDb : defaultTestimonials;
+
+  return (
+    <section
+      id="testimonials"
+      className="rexpt-section py-12 section-reveal"
+      aria-label="What Our Customers Say"
+    >
+ <div className="container mx-auto px-4">
+        <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
+          What Our Customers Say
+        </h2>
+
+        {/* Horizontal scroller with uniform-size cards */}
+        <div
+          ref={scrollerRef}
+          className={`overflow-y-hidden pb-2 pr-1 snap-x snap-mandatory ${
+            isOverflowing
+              ? 'overflow-x-auto [-ms-overflow-style:auto] [scrollbar-width:auto] [&::-webkit-scrollbar]:auto'
+              : 'overflow-x-hidden [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'
+          } md:[&::-webkit-scrollbar]:auto scroll-smooth`}
+    >
+          <div ref={trackRef} className="flex gap-6 items-stretch—" style={{ minWidth: 'fit-content' }}>
+            {loading && (
+              <>
+                <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+                <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+                <div className="w-[340px] md:w-[360px] h-[260px] bg-gray-100 rounded-lg animate-pulse flex-shrink-0" />
+              </>
+            )}
+
+            {!loading &&
+              items.map((t, idx) => (
+                <div
+                  key={`${t.name}-${idx}`}
+                  className="snap-start w-[340px] md:w-[360px] flex-shrink-0"
+                >
+                  <TestimonialCard
+                    name={t.name}
+                    role={t.role}
+                    quote={t.quote}
+                    image={t.image}
+                  />
+                </div>
+              ))}
+          </div>
+        </div>
       </div>
-      <span className="font-semibold">{name}</span>
-      <span className="text-gray-600">{role}</span>
+    </section>
+  );
+};
+
+const TestimonialCard: React.FC<TestimonialCardProps> = ({ name, role, quote, image }) => (
+  <figure className="bg-white shadow-md rounded-lg p-4 w-[340px] md:w-[360px] h-[260px] flex flex-col">
+    <blockquote
+      className="mb-3 text-sm leading-relaxed overflow-hidden"
+      style={{
+        display: '-webkit-box',
+        WebkitLineClamp: 4,
+        WebkitBoxOrient: 'vertical',
+      }}
+    >
+      “{quote}”
+    </blockquote>
+
+    <figcaption className="mt-auto flex items-center gap-3">
+      <div className="h-16 w-16 rounded-full overflow-hidden bg-rexpt-primary-50 flex-shrink-0">
+        <img src={image} alt={name} className="h-full w-full object-cover" />
+      </div>
+      <div className="min-w-0">
+        <div className="font-semibold truncate">{name}</div>
+        {role ? <div className="text-gray-600 text-sm truncate">{role}</div> : null}
+      </div>
     </figcaption>
   </figure>
 );
@@ -623,9 +734,9 @@ const PartnerContact: React.FC<PartnerContactProps> = ({
     aria-label="Contact Your Rexpt Partner"
   >
     <div className="container mx-auto px-4">
-      <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
+      {/* <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
         Questions? Contact Your Rexpt Partner
-      </h2>
+      </h2> */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
         <ContactCard
           title="Partner's Name"
@@ -694,6 +805,81 @@ const ContactCard: React.FC<ContactCardProps> = ({ title, value, Icon }) => (
     <p className="font-bold select-text">{value}</p>
   </div>
 );
+
+const AboutSection: React.FC<{
+  name?: string;
+  description?: string;
+  imageUrl?: string;
+  loading?: boolean;
+}> = ({ name, description, imageUrl, loading }) => {
+  const desc =
+    (description && description.trim()) ||
+    `Hi! I'm ${name || "your Rexpt partner"}. I help businesses automate inbound calls with AI — scheduling appointments, qualifying leads, and routing calls 24/7.`;
+
+  const imgSrc = (imageUrl && imageUrl.trim()) || "/images/defaultiprofile.svg";
+
+  return (
+    <section id="about" className="rexpt-section py-14 bg-white section-reveal">
+      <div className="container mx-auto px-4">
+        <h2 className="text-center text-3xl font-extrabold font-lato mb-8">
+          About {name || "the Partner"}
+        </h2>
+
+        {loading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div className="h-[360px] rounded-[24px] bg-gray-200 animate-pulse" />
+            <div className="rounded-2xl p-6 ring-1 ring-[#6424EC]/10 bg-white/70 shadow-md">
+              <div className="h-5 w-2/3 bg-gray-200 mb-3 animate-pulse rounded" />
+              <div className="h-4 w-full bg-gray-200 mb-2 animate-pulse rounded" />
+              <div className="h-4 w-5/6 bg-gray-200 mb-2 animate-pulse rounded" />
+              <div className="h-4 w-4/6 bg-gray-200 animate-pulse rounded" />
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style={{display:'flex'}}>
+            <div className="relative" style={{width:'100%'}}>
+              <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-br from-[#C6AFF6] to-transparent blur-2xl opacity-60 pointer-events-none" />
+              <div className="relative overflow-hidden rounded-[24px] ring-1 ring-[#6424EC]/10 shadow-lg">
+                <img
+                  src={imgSrc}
+                  alt="About"
+                  className="w-full h-[360px] "
+                />
+              </div>
+            </div>
+
+         <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6 min-h-[300px]">
+  <div className="relative group">
+    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg cursor-pointer">
+      {desc.length > 800 ? desc.slice(0, 800) + "..." : desc}
+    </p>
+
+    {desc.length > 800 && (
+  <span className="absolute z-20 hidden group-hover:block 
+    bg-black 
+    text-white text-sm font-sm shadow-2xl rounded-xl p-4 
+    max-w-xxl -bottom-3 left-0 translate-y-full 
+    animate-fadeIn border border-white/20
+  ">
+    <span className="block">{desc}</span>
+
+    {/* Tooltip arrow */}
+    <span className="absolute -top-2 left-6 w-4 h-4 rotate-45 
+      bg-black 
+      border-l border-t border-white/20
+    "></span>
+  </span>
+)}
+
+  </div>
+</div>
+
+          </div>
+        )}
+      </div>
+    </section>
+  );
+};
 
 // -----------------------------
 // Footer Component
@@ -801,6 +987,9 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
   const [showPricingModal, setShowPricingModal] = useState(false);
   const [selectedPlanName, setSelectedPlanName] = useState("");
   const searchParams = useSearchParams();
+  const [aboutDesc, setAboutDesc] = useState<string>("");
+  const [aboutImgUrl, setAboutImgUrl] = useState<string>("");
+  const [aboutLoading, setAboutLoading] = useState<boolean>(false);
 
   const discountToPlanMap: Record<number, string> = {
     90: "Starter",
@@ -808,6 +997,38 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
     450: "Growth",
     700: "Corporate",
   };
+  useEffect(() => {
+    if (!ReferalName) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setAboutLoading(true);
+        const res = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/endusers/aboutsection/${ReferalName}`
+        );
+        const desc = res.data?.aboutDescription || "";
+        const rel = res.data?.aboutImage || "";
+        const abs = toApiFileUrl(rel);
+
+        if (!cancelled) {
+          setAboutDesc(desc);
+          setAboutImgUrl(abs);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setAboutDesc("");
+          setAboutImgUrl("");
+        }
+      } finally {
+        if (!cancelled) setAboutLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ReferalName]);
 
   useEffect(() => {
     const isUsingVPN = country === "US";
@@ -934,21 +1155,28 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
       `}</style>
       <Header
         ReferalName={ReferalName}
-        // onGetStartedClick={() => {
-        //   setSelectedPlanName("Starter"); // या जो भी plan चाहिए
-        //   // setShowPricingModal(true);
-        // }}
+      // onGetStartedClick={() => {
+      //   setSelectedPlanName("Starter"); // या जो भी plan चाहिए
+      //   // setShowPricingModal(true);
+      // }}
       />
       <HeroSection ReferalName={ReferalName} />
       <FeaturesSection />
       <BenefitsSection />
-      <TestimonialsSection />
+      <TestimonialsSection referalName={ReferalName} />
       <FinalCTA ReferalName={ReferalName} />
+      <AboutSection
+        name={PARTNER_NAME}
+        description={aboutDesc}
+        imageUrl={aboutImgUrl}
+        loading={aboutLoading}
+      />
       <PartnerContact
         PARTNER_PHONE={PARTNER_PHONE}
         PARTNER_NAME={PARTNER_NAME}
         PARTNER_EMAIL={PARTNER_EMAIL}
       />
+      
       <Footer />
       {/* 
       <SubscriptionModal
