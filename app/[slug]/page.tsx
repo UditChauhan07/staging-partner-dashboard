@@ -826,8 +826,8 @@ const AboutSection: React.FC<{
         </h2>
 
         {loading ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-            <div className="h-[360px] rounded-[24px] bg-gray-200 animate-pulse" />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style={{display:'flex'}}>
+            <div className="  relative rounded-[24px] bg-gray-200 "style={{width:'100%'}} />
             <div className="rounded-2xl p-6 ring-1 ring-[#6424EC]/10 bg-white/70 shadow-md">
               <div className="h-5 w-2/3 bg-gray-200 mb-3 animate-pulse rounded" />
               <div className="h-4 w-full bg-gray-200 mb-2 animate-pulse rounded" />
@@ -851,10 +851,10 @@ const AboutSection: React.FC<{
          <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6 min-h-[300px]">
   <div className="relative group">
     <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg cursor-pointer">
-      {desc.length > 800 ? desc.slice(0, 800) + "..." : desc}
+      {desc.length > 600 ? desc.slice(0, 600) + "..." : desc}
     </p>
-
-    {desc.length > 800 && (
+{/* 
+    {desc.length > 600 && (
   <span className="absolute z-20 hidden group-hover:block 
     bg-black 
     text-white text-sm font-sm shadow-2xl rounded-xl p-4 
@@ -864,12 +864,12 @@ const AboutSection: React.FC<{
     <span className="block">{desc}</span>
 
     {/* Tooltip arrow */}
-    <span className="absolute -top-2 left-6 w-4 h-4 rotate-45 
+    {/* <span className="absolute -top-2 left-6 w-4 h-4 rotate-45 
       bg-black 
       border-l border-t border-white/20
     "></span>
   </span>
-)}
+)}  */}
 
   </div>
 </div>
