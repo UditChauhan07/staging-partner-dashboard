@@ -602,8 +602,8 @@ export function AgentBusinessList({ onViewAgent }: AgentBusinessListProps) {
                     const matchedRequest = alreadyrequest.find(
                       (req: any) => req.agentId === row.agentId
                     );
-
-                    let buttonLabel = "Raise Request";
+ 
+                    let buttonLabel = "Raise Deletion Request";
                     let disabled = false;
 
                     if (matchedRequest) {
