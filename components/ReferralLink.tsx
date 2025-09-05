@@ -303,6 +303,11 @@ import { Switch as UiSwitch } from "@/components/ui/switch";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import axios from "axios";
+import {
+  
+  Trash2,
+  
+} from "lucide-react";
 
 /* ----------------------------- */
 interface PartnerDetails {
@@ -770,6 +775,37 @@ export function ReferralLink() {
   // Testimonials local helper display image
   const tImage = (p?: string | null) => (p ? p : "/images/defaultiprofile.svg");
 
+
+ const handledeleteTestimonial = async (id) => {
+  try {
+    const res = await axios.delete(
+      `${process.env.NEXT_PUBLIC_API_URL}/api/testimonials/deleteTestimonial/${id}`
+    )
+
+    if (res.status === 200) {
+       toast.success("Testimonial deleted.");
+
+      // 🔄 Update state to remove deleted testimonial from UI
+      setTestimonials((prev) => prev.filter((t) => t.id !== id))
+    } else {
+      Swal.fire({
+        icon: "error",
+        title: "Failed",
+        text: res.data?.message || "Something went wrong.",
+      })
+    }
+  } catch (error) {
+    console.error("❌ Delete error:", error)
+ const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.error ||
+        "Request failed";
+    
+       toast.error(msg); 
+        
+  }
+}
+
   /* =========================
      RENDER
      ========================= */
@@ -1122,6 +1158,15 @@ export function ReferralLink() {
                             >
                               <Pencil size={16} />
                             </button>
+                            
+                                <button
+                              className="self-start p-2 rounded hover:bg-gray-100"
+                              title="Edit"
+                              onClick={() => handledeleteTestimonial(t.id)}
+                            >
+                              <Trash2 size={16} />
+                            </button>
+
                           </div>
                         ))}
                     </div>
