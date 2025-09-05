@@ -604,7 +604,7 @@ export function UserManagement({ onViewUser }: UserManagementProps) {
       requestingUserId === user.id || isRaised || isResolved;
 
     const buttonLabel = !matchedRequest
-      ? "Raise DeletionRequest"
+      ? "Raise Deletion Request"
       : matchedRequest.Status === "Not Resolved"
       ? "Raised"
       : matchedRequest.Status === "Resolved"

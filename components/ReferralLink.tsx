@@ -1281,7 +1281,7 @@ export function ReferralLink() {
                     <>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {/* Description */}
-                        <div className="md:col-span-2">
+                        {/* <div className="md:col-span-2">
                           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#4b4b52]">
                             About Description
                           </label>
@@ -1291,7 +1291,32 @@ export function ReferralLink() {
                             onChange={(e) => setAboutText(e.target.value)}
                             placeholder="Tell visitors about you/your business…"
                           />
-                        </div>
+                        </div> */}
+
+
+
+<div className="md:col-span-2">
+  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#4b4b52]">
+    About Description
+  </label>
+  <textarea
+    className="min-h-[140px] w-full rounded-lg border border-[#6424ec]/30 bg-white px-3 py-2 text-[#1b1b1f] placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#6424ec]"
+    value={aboutText}
+    onChange={(e) => {
+      const text = e.target.value;
+      if (text.length <= 600) {
+        setAboutText(text);
+      } else {
+        setAboutText(text.slice(0, 600)); // trim extra chars
+      }
+    }}
+    placeholder="Tell visitors about you/your business…"
+  />
+  <p className="mt-1 text-xs text-gray-500">
+    {aboutText.length}/600 characters
+  </p>
+</div>
+
 
                         {/* Image picker */}
                         <div>
