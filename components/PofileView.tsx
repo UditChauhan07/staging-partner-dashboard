@@ -181,7 +181,7 @@ useEffect(() => {
         <CardContent className="space-y-6 pt-4">
           <div className="flex justify-between items-center border-b pb-4 mb-4">
             <h2 className="text-3xl font-bold">Your Profile</h2>
-            <Button variant="outline" style={{ backgroundColor: 'black', color: 'white' }} onClick={() => setShowPasswordModal(true)}>
+            <Button  onClick={() => setShowPasswordModal(true)} className="bg-purple-600 text-white hover:bg-purple-700">
               Change Password
             </Button>
           </div>
@@ -253,7 +253,7 @@ useEffect(() => {
           </div>
 
           <div className="pt-6 flex justify-end">
-            <Button onClick={handleSubmit} disabled={updating}>
+            <Button onClick={handleSubmit} disabled={updating} className="bg-purple-600 text-white hover:bg-purple-700">
               {updating ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Updating...</> : "Update Profile"}
             </Button>
           </div>
@@ -339,6 +339,7 @@ useEffect(() => {
         </Button>
        <Button
   disabled={changingPassword}
+  className="bg-purple-600 text-white hover:bg-purple-700"
   onClick={async () => {
     if (!oldPassword || !newPassword || !confirmPassword) {
       return Swal.fire("Please fill all fields.");

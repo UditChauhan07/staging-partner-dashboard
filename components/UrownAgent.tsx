@@ -1811,14 +1811,14 @@ The user transcript might contain transcription errors. Use your best judgment t
 
 
 
-      <Button className="w-full" onClick={handleSubmit} disabled={loading}>
+      <Button className="w-full bg-purple-600 text-white hover:bg-purple-700" onClick={handleSubmit} disabled={loading}>
 {loading ? (mode === "create" ? "Creating..." : "Updating...") : (mode === "create" ? "Create" : "Update")}      </Button>
       <br /><br />
 
 {mode === "edit" && (
   <Button
     variant="outline"
-    className="w-full mt-2"
+    className="w-full mt-2 bg-purple-600 text-white hover:bg-purple-700"
     onClick={() => {
       setMode("create");
       setForm({ language: "", agentName: "", gender: "", voice: "", selectedVoice: null, avatar: "" });

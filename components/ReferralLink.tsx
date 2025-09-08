@@ -823,19 +823,34 @@ export function ReferralLink() {
           <div className="flex justify-center gap-4 mb-6">
             <Button
               onClick={() => setActiveTab("referralLink")}
-              variant={activeTab === "referralLink" ? "default" : "outline"}
+              // variant={activeTab === "referralLink" ? "default" : "outline"}
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeTab === "referralLink"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+            }`}
             >
               Referral Link
             </Button>
             <Button
               onClick={() => setActiveTab("websiteUrl")}
-              variant={activeTab === "websiteUrl" ? "default" : "outline"}
+              // variant={activeTab === "websiteUrl" ? "default" : "outline"}
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeTab === "websiteUrl"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+            }`}
             >
               Website URL
             </Button>
             <Button
               onClick={() => setActiveTab("businessCard")}
-              variant={activeTab === "businessCard" ? "default" : "outline"}
+              // variant={activeTab === "businessCard" ? "default" : "outline"}
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeTab === "businessCard"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+            }`}
             >
               Business Card
             </Button>
@@ -898,7 +913,7 @@ export function ReferralLink() {
                   />
                 </div>
 
-                <Button onClick={() => setShowPreview((s) => !s)}>
+                <Button onClick={() => setShowPreview((s) => !s)} className="bg-purple-600 text-white hover:bg-purple-700">
                   {showPreview ? "Close" : "Preview"}
                 </Button>
                 {/* EDIT now opens modal */}
@@ -974,8 +989,8 @@ export function ReferralLink() {
                   <QRCodeCanvas value={partnerWebsite || fullLink} size={80} />
                 </div>
               </div>
-              <div className="flex justify-center mt-4">
-                <Button onClick={downloadBusinessCard}>Download PDF Vector File</Button>
+              <div className="flex justify-center mt-4 ">
+                <Button onClick={downloadBusinessCard} className="bg-purple-600 text-white hover:bg-purple-700">Download PDF Vector File</Button>
               </div>
             </div>
           )}
