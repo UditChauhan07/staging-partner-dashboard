@@ -823,19 +823,34 @@ export function ReferralLink() {
           <div className="flex justify-center gap-4 mb-6">
             <Button
               onClick={() => setActiveTab("referralLink")}
-              variant={activeTab === "referralLink" ? "default" : "outline"}
+              // variant={activeTab === "referralLink" ? "default" : "outline"}
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeTab === "referralLink"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+            }`}
             >
               Referral Link
             </Button>
             <Button
               onClick={() => setActiveTab("websiteUrl")}
-              variant={activeTab === "websiteUrl" ? "default" : "outline"}
+              // variant={activeTab === "websiteUrl" ? "default" : "outline"}
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeTab === "websiteUrl"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+            }`}
             >
               Website URL
             </Button>
             <Button
               onClick={() => setActiveTab("businessCard")}
-              variant={activeTab === "businessCard" ? "default" : "outline"}
+              // variant={activeTab === "businessCard" ? "default" : "outline"}
+              className={`px-4 py-2 rounded font-medium transition-colors ${
+              activeTab === "businessCard"
+                ? "bg-purple-600 text-white hover:bg-purple-700"
+                : "bg-white text-gray-700 border border-gray-300 hover:bg-gray-100"
+            }`}
             >
               Business Card
             </Button>
@@ -898,7 +913,7 @@ export function ReferralLink() {
                   />
                 </div>
 
-                <Button onClick={() => setShowPreview((s) => !s)}>
+                <Button onClick={() => setShowPreview((s) => !s)} className="bg-purple-600 text-white hover:bg-purple-700">
                   {showPreview ? "Close" : "Preview"}
                 </Button>
                 {/* EDIT now opens modal */}
@@ -974,8 +989,8 @@ export function ReferralLink() {
                   <QRCodeCanvas value={partnerWebsite || fullLink} size={80} />
                 </div>
               </div>
-              <div className="flex justify-center mt-4">
-                <Button onClick={downloadBusinessCard}>Download PDF Vector File</Button>
+              <div className="flex justify-center mt-4 ">
+                <Button onClick={downloadBusinessCard} className="bg-purple-600 text-white hover:bg-purple-700">Download PDF Vector File</Button>
               </div>
             </div>
           )}
@@ -1281,7 +1296,7 @@ export function ReferralLink() {
                     <>
                       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         {/* Description */}
-                        <div className="md:col-span-2">
+                        {/* <div className="md:col-span-2">
                           <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#4b4b52]">
                             About Description
                           </label>
@@ -1291,7 +1306,32 @@ export function ReferralLink() {
                             onChange={(e) => setAboutText(e.target.value)}
                             placeholder="Tell visitors about you/your business…"
                           />
-                        </div>
+                        </div> */}
+
+
+
+<div className="md:col-span-2">
+  <label className="mb-1 block text-xs font-semibold uppercase tracking-wide text-[#4b4b52]">
+    About Description
+  </label>
+  <textarea
+    className="min-h-[140px] w-full rounded-lg border border-[#6424ec]/30 bg-white px-3 py-2 text-[#1b1b1f] placeholder:text-[#888] focus:outline-none focus:ring-2 focus:ring-[#6424ec]"
+    value={aboutText}
+    onChange={(e) => {
+      const text = e.target.value;
+      if (text.length <= 600) {
+        setAboutText(text);
+      } else {
+        setAboutText(text.slice(0, 600)); // trim extra chars
+      }
+    }}
+    placeholder="Tell visitors about you/your business…"
+  />
+  <p className="mt-1 text-xs text-gray-500">
+    {aboutText.length}/600 characters
+  </p>
+</div>
+
 
                         {/* Image picker */}
                         <div>

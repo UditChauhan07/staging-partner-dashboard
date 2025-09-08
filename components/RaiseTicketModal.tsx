@@ -271,7 +271,7 @@ const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 
         {/* Submit Buttons */}
         <div className="flex gap-4">
-          <Button className="w-full" onClick={handleSubmit} disabled={loading}>
+          <Button className="w-full bg-purple-600 text-white hover:bg-purple-700" onClick={handleSubmit} disabled={loading}>
             {loading ? <ClipLoader size={17} color="#ffffffff"/> : mode === "raise" ? "Submit" : mode === "resolve" ? "Resolve" : "Reopen"}
           </Button>
           <Button variant="outline" className="w-full" onClick={onClose} disabled={loading}> 

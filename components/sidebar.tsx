@@ -1,7 +1,9 @@
 "use client"
-import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2, Grid2x2Check, Package, Coins, CoinsIcon ,Tickets,TvMinimalPlay} from "lucide-react"
+import {Users,LogOut, Menu, X, Headphones,Link2,Shield, UserCheck2, Grid2x2Check, Package, Coins, CoinsIcon ,Tickets,
+  TvMinimalPlay,Presentation} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "recharts"
+import { useEffect, useState } from "react"
 
 interface SidebarProps {
   activeSection: string
@@ -22,12 +24,31 @@ const navigationItems = [
   {id:"ProfileDetails",label:"Profile Details",icon:Shield},
   {id:"RaiseTickets",label:"Raise Ticket",icon:Tickets},
   { id: "PartnerResources", label: "Partner Resources", icon: TvMinimalPlay },
+  { id: "Demo", label: "Demo", icon: Presentation  },
+
 
 
 ]
 
 
 export function Sidebar({ activeSection, onSectionChange, isCollapsed, onToggleCollapse, onLogout }: SidebarProps) {
+    console.log(isCollapsed)
+
+useEffect(() => {
+    // Only run on mount to set initial state based on screen size
+    const handleInitialResize = () => {
+      console.log('init run',window.innerWidth)
+      if (window.innerWidth <= 768 && !isCollapsed) {
+        onToggleCollapse();
+      } else if (window.innerWidth > 768 && isCollapsed) {
+        onToggleCollapse();
+      }
+    };
+
+    handleInitialResize(); // Run on mount only
+
+    // No resize event listener needed to override user choice
+  }, [])
   return (
     <div
       className={`bg-white border-r border-gray-200 transition-all duration-300 ${isCollapsed ? "w-16" : "w-64"} flex flex-col h-screen fixed left-0 top-0 z-40`}

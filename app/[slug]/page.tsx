@@ -213,93 +213,227 @@ const IconSecure: React.FC<IconProps> = ({ size = 28 }) => (
 // Header Component
 // -----------------------------
 const Header: React.FC = ({ ReferalName, onGetStartedClick }) => (
-  <nav
-    className="rexpt-nav fixed top-0 w-full bg-white shadow-md py-2 z-10"
-    role="navigation"
-    aria-label="Primary"
-  >
-    <div className="container mx-auto px-4">
-      <div
-        className="flex items-center justify-between "
-        style={{ height: "40px", padding: "10px" }}
-      >
-        {/* <button
-          className="flex items-center gap-2 bg-transparent border-0"
-          onClick={() => scroll.scrollToTop({ duration: 500 })}
-        > */}
-        <img src="/Rexpt-Logo.png" height={"100px"} width={"180px"} />
-        {/* <span className="font-extrabold text-rexpt-primary text-xl font-lato">
-            Rexpt
-          </span> */}
-        {/* </button> */}
+  // <nav
+  //   className="rexpt-nav fixed top-0 w-full bg-white shadow-md py-2 z-10"
+  //   role="navigation"
+  //   aria-label="Primary"
+  // >
+  //   <div className="container mx-auto px-4">
+  //     <div
+  //       className="flex items-center justify-between "
+  //       style={{ height: "40px", padding: "10px" }}
+  //     >
+  //       {/* <button
+  //         className="flex items-center gap-2 bg-transparent border-0"
+  //         onClick={() => scroll.scrollToTop({ duration: 500 })}
+  //       > */}
+  //       <img src="/Rexpt-Logo.png" height={"100px"} width={"180px"} />
+  //       {/* <span className="font-extrabold text-rexpt-primary text-xl font-lato">
+  //           Rexpt
+  //         </span> */}
+  //       {/* </button> */}
 
-        <button
-          className="lg:hidden"
-          type="button"
-          onClick={() => {
-            const nav = document.getElementById("rexptNav");
-            if (nav) nav.classList.toggle("hidden");
-          }}
-          aria-controls="rexptNav"
-          aria-expanded="false"
-          aria-label="Toggle navigation"
-        >
-          <span className="text-2xl">☰</span>
-        </button>
+  //       <button
+  //         className="lg:hidden"
+  //         type="button"
+  //         onClick={() => {
+  //           const nav = document.getElementById("rexptNav");
+  //           if (nav) nav.classList.toggle("hidden");
+  //         }}
+  //         aria-controls="rexptNav"
+  //         aria-expanded="false"
+  //         aria-label="Toggle navigation"
+  //       >
+  //         <span className="text-2xl">☰</span>
+  //       </button>
 
-        <div className="hidden lg:flex lg:items-center lg:gap-6" id="rexptNav">
-          <ul className="flex gap-6">
-            <li>
-              <ScrollLink
-                className="cursor-pointer hover:text-rexpt-primary"
-                to="features"
-                smooth
-                duration={500}
-                offset={-80}
-              >
-                Features
-              </ScrollLink>
-            </li>
-            <li>
-              <ScrollLink
-                className="cursor-pointer hover:text-rexpt-primary"
-                to="benefits"
-                smooth
-                duration={500}
-                offset={-80}
-              >
-                Benefits
-              </ScrollLink>
-            </li>
-            <li>
-              <ScrollLink
-                className="cursor-pointer hover:text-rexpt-primary"
-                to="testimonials"
-                smooth
-                duration={500}
-                offset={-80}
-              >
-                Testimonials
-              </ScrollLink>
-            </li>
-            <li
-            // className="bg-rexpt-primary text-white px-6 py-2 rounded-full shadow hover:shadow-lg transition transform hover:-translate-y-0.5"
-            // //  onClick={onGetStartedClick}
-            >
-              <a
-                className="bg-rexpt-primary text-white px-6 py-2 rounded-full shadow hover:shadow-lg transition transform hover:-translate-y-0.5"
-                href={`${process.env.NEXT_PUBLIC_APP_URL}/${ReferalName}`}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Get Started
-              </a>
-            </li>
-          </ul>
+  //       <div className="hidden lg:flex lg:items-center lg:gap-6 " id="rexptNav">
+  //         <ul className="flex  gap-6">
+  //           <li>
+  //             <ScrollLink
+  //               className="cursor-pointer hover:text-rexpt-primary"
+  //               to="features"
+  //               smooth
+  //               duration={500}
+  //               offset={-80}
+  //             >
+  //               Features
+  //             </ScrollLink>
+  //           </li>
+  //           <li>
+  //             <ScrollLink
+  //               className="cursor-pointer hover:text-rexpt-primary"
+  //               to="benefits"
+  //               smooth
+  //               duration={500}
+  //               offset={-80}
+  //             >
+  //               Benefits
+  //             </ScrollLink>
+  //           </li>
+  //           <li>
+  //             <ScrollLink
+  //               className="cursor-pointer hover:text-rexpt-primary"
+  //               to="testimonials"
+  //               smooth
+  //               duration={500}
+  //               offset={-80}
+  //             >
+  //               Testimonials
+  //             </ScrollLink>
+  //           </li>
+  //           <li
+  //           // className="bg-rexpt-primary text-white px-6 py-2 rounded-full shadow hover:shadow-lg transition transform hover:-translate-y-0.5"
+  //           // //  onClick={onGetStartedClick}
+  //           >
+  //             <a
+  //               className="bg-rexpt-primary text-white px-6 py-2 rounded-full shadow hover:shadow-lg transition transform hover:-translate-y-0.5"
+  //               href={`${process.env.NEXT_PUBLIC_APP_URL}/${ReferalName}`}
+  //               target="_blank"
+  //               rel="noreferrer"
+  //             >
+  //               Get Started
+  //             </a>
+  //           </li>
+  //         </ul>
+  //       </div>
+  //     </div>
+  //   </div>
+  // </nav>
+
+
+   <nav
+      className="rexpt-nav fixed top-0 w-full bg-white shadow-md py-2 z-10"
+      role="navigation"
+      aria-label="Primary"
+    >
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-14">
+          {/* Logo */}
+          <img
+            src="/Rexpt-Logo.png"
+            alt="Rexpt Logo"
+            className="h-10 w-auto"
+          />
+
+          {/* Hamburger button (mobile only) */}
+          <button
+            className="lg:hidden text-2xl"
+            type="button"
+            onClick={() => {
+              const nav = document.getElementById("rexptMobileNav");
+              if (nav) nav.classList.toggle("hidden");
+            }}
+            aria-controls="rexptMobileNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+          >
+            ☰
+          </button>
+
+          {/* Desktop Nav Links */}
+          <div className="hidden lg:flex lg:items-center lg:gap-6">
+            <ul className="flex gap-6">
+              <li>
+                <ScrollLink
+                  className="cursor-pointer hover:text-rexpt-primary"
+                  to="features"
+                  smooth
+                  duration={500}
+                  offset={-80}
+                >
+                  Features
+                </ScrollLink>
+              </li>
+              <li>
+                <ScrollLink
+                  className="cursor-pointer hover:text-rexpt-primary"
+                  to="benefits"
+                  smooth
+                  duration={500}
+                  offset={-80}
+                >
+                  Benefits
+                </ScrollLink>
+              </li>
+              <li>
+                <ScrollLink
+                  className="cursor-pointer hover:text-rexpt-primary"
+                  to="testimonials"
+                  smooth
+                  duration={500}
+                  offset={-80}
+                >
+                  Testimonials
+                </ScrollLink>
+              </li>
+              <li>
+                <a
+                  className="bg-rexpt-primary text-white px-6 py-2 rounded-full shadow hover:shadow-lg transition transform hover:-translate-y-0.5"
+                  href={`${process.env.NEXT_PUBLIC_APP_URL}/${ReferalName}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Get Started
+                </a>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
-    </div>
-  </nav>
+
+      {/* Mobile Nav (separate id) */}
+      <div className="lg:hidden hidden px-4 pb-4" id="rexptMobileNav">
+        <ul className="flex flex-col gap-4" style={{    textAlign: "end"}}>
+          <li>
+            <ScrollLink
+              className="cursor-pointer hover:text-rexpt-primary"
+              to="features"
+              smooth
+              duration={500}
+              offset={-80}
+            >
+              Features
+            </ScrollLink>
+          </li>
+          <li>
+            <ScrollLink
+              className="cursor-pointer hover:text-rexpt-primary"
+              to="benefits"
+              smooth
+              duration={500}
+              offset={-80}
+            >
+              Benefits
+            </ScrollLink>
+          </li>
+          <li>
+            <ScrollLink
+              className="cursor-pointer hover:text-rexpt-primary"
+              to="testimonials"
+              smooth
+              duration={500}
+              offset={-80}
+            >
+              Testimonials
+            </ScrollLink>
+          </li>
+          <li style={{width: "100%",    
+    justifyContent: "end",
+    display: "flex"
+}}>
+            <a
+              className="bg-rexpt-primary text-white px-6 py-2 rounded-full shadow hover:shadow-lg transition transform hover:-translate-y-0.5 block text-center"
+              href={`${process.env.NEXT_PUBLIC_APP_URL}/${ReferalName}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Get Started
+            </a>
+          </li>
+        </ul>
+      </div>
+    </nav>
 );
 
 // -----------------------------
@@ -734,9 +868,9 @@ const PartnerContact: React.FC<PartnerContactProps> = ({
     aria-label="Contact Your Rexpt Partner"
   >
     <div className="container mx-auto px-4">
-      {/* <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
-        Questions? Contact Your Rexpt Partner
-      </h2> */}
+      <h2 className="text-center text-3xl font-extrabold font-lato mb-4">
+       Have Questions ? Contact Your Rexpt Partner
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 justify-items-center">
         <ContactCard
           title="Partner's Name"
@@ -837,8 +971,8 @@ const AboutSection: React.FC<{
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center" style={{display:'flex'}}>
-            <div className="relative" style={{width:'100%'}}>
-              <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-br from-[#C6AFF6] to-transparent blur-2xl opacity-60 pointer-events-none" />
+            <div className="relative" style={{width:'100%'}} >
+              <div className="absolute -inset-2 rounded-[28px] bg-gradient-to-br from-[#C6AFF6] to-transparent blur-2xl opacity-60 pointer-events-none"  />
               <div className="relative overflow-hidden rounded-[24px] ring-1 ring-[#6424EC]/10 shadow-lg">
                 <img
                   src={imgSrc}
@@ -848,9 +982,9 @@ const AboutSection: React.FC<{
               </div>
             </div>
 
-         <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6 min-h-[300px]">
+         <div className="bg-white/70 rounded-2xl ring-1 ring-[#6424EC]/10 shadow-md p-6 min-h-[300px]" style={{width:'70%'}}>
   <div className="relative group">
-    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg cursor-pointer">
+    <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg cursor-pointer" style={{wordWrap:'break-word'}}>
       {desc.length > 600 ? desc.slice(0, 600) + "..." : desc}
     </p>
 {/* 
@@ -1165,12 +1299,12 @@ const RexptLandingPage: React.FC<RexptLandingPageProps> = ({ slug }) => {
       <BenefitsSection />
       <TestimonialsSection referalName={ReferalName} />
       <FinalCTA ReferalName={ReferalName} />
-      <AboutSection
+      {/* <AboutSection
         name={PARTNER_NAME}
         description={aboutDesc}
         imageUrl={aboutImgUrl}
         loading={aboutLoading}
-      />
+      /> */}
       <PartnerContact
         PARTNER_PHONE={PARTNER_PHONE}
         PARTNER_NAME={PARTNER_NAME}

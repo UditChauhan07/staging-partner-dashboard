@@ -98,7 +98,7 @@ const totalPages = Math.ceil(tickets.length / ticketsPerPage);
     <div className="p-4 space-y-4 px-2">
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Tickets</h2>
-        <Button onClick={() => setModalOpen(true)}>Raise New Ticket</Button>
+        <Button onClick={() => setModalOpen(true)} className="bg-purple-600 text-white hover:bg-purple-700">Raise New Ticket</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -130,7 +130,7 @@ const totalPages = Math.ceil(tickets.length / ticketsPerPage);
         </Select>
 
         {/* <Input placeholder="Category" value={category} onChange={(e) => setCategory(e.target.value)} /> */}
-        <Button onClick={()=>{setPriority("");setStatus("");setCurrentPage(1);}}>Clear Filter</Button>
+        <Button onClick={()=>{setPriority("");setStatus("");setCurrentPage(1);}} className="bg-purple-600 text-white hover:bg-purple-700">Clear Filter</Button>
       </div>
 
       <Card className="overflow-x-auto">
